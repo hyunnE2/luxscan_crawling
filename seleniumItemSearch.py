@@ -18,7 +18,8 @@ password = os.environ.get('PASSWORD')
 db = os.environ.get('DB')
 charset = os.environ.get('CHARSET')
 
-print(datetime.now())
+file = open('crawling_log.txt', 'a')
+file.write(f'start bot1 at : {datetime.now()}\n')
 
 conn = pymysql.connect(host=host, user=user, password=password, db=db, charset=charset)
 cur = conn.cursor()
@@ -109,9 +110,12 @@ for brand in brands:
 
 
             conn.commit()     
-        print(f'{brand} {category} ended : ', datetime.now())
+        file.write(f'bot1 : {brand} {category} ended : {datetime.now()}\n')
         break
     break
+
+file.write(f'end bot1 at : {datetime.now()}\n\n')
+file.close()
 
 browser.quit()
 conn.close()
