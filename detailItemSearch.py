@@ -11,134 +11,137 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 
-def detailItemSearch():
-    load_dotenv()
+load_dotenv()
 
-    base_url = os.environ.get('BASE_URL')
-    host = os.environ.get('HOST')
-    user = os.environ.get('USER')
-    password = os.environ.get('PASSWORD')
-    db = os.environ.get('DB')
-    charset = os.environ.get('CHARSET')
+base_url = os.environ.get('BASE_URL')
+host = os.environ.get('HOST')
+user = os.environ.get('USER')
+password = os.environ.get('PASSWORD')
+db = os.environ.get('DB')
+charset = os.environ.get('CHARSET')
 
-    print(datetime.now())
+print(datetime.now())
 
-    conn = pymysql.connect(host=host, user=user, password=password, db=db, charset=charset)
-    cur = conn.cursor(pymysql.cursors.DictCursor)
+conn = pymysql.connect(host=host, user=user, password=password, db=db, charset=charset)
+cur = conn.cursor(pymysql.cursors.DictCursor)
 
-    cur.execute('SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,\'ONLY_FULL_GROUP_BY\',\'\'))')
+cur.execute('SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,\'ONLY_FULL_GROUP_BY\',\'\'))')
 
-    cur.execute('select product.p_id as p_id, p_url from crawling_product_list join product on crawling_product_list.p_id = product.p_id order by cpl_id asc limit 1000')
-    crawling_items = cur.fetchall()
+cur.execute('select product.p_id as p_id, cpl_id, p_url from crawling_product_list join product on crawling_product_list.p_id = product.p_id order by cpl_id asc limit 1000')
+crawling_items = cur.fetchall()
 
-    # if len(crawling_items) < 1000:
-    #     cur.execute('truncate crawling_product_list')
-    # else:
-    #     cur.execute(f'delete from crawling_product_list where cpl_id >= {crawling_items[0]['cpl_id']} and cpl_id <= {crawling_items[-1]['cpl_id']}')
+if crawling_items != None:
+    cur.execute(f'delete from crawling_product_list where cpl_id >= {cur[0]['cpl_id']} and cpl_id <= {cur[-1]['cpl_id']}')
+else:
+    cur.execute(f'truncate crawling_proudct_list')
+# if len(crawling_items) < 1000:
+#     cur.execute('truncate crawling_product_list')
+# else:
+#     cur.execute(f'delete from crawling_product_list where cpl_id >= {crawling_items[0]['cpl_id']} and cpl_id <= {crawling_items[-1]['cpl_id']}')
 
-    # setting chrome options
-    
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--disable-dev-shm-usage')
-    browser = webdriver.Chrome()
+# setting chrome options
 
-    ## login 
-    browser.get(base_url+'/login')
-    id = browser.find_element(By.XPATH, '//*[@id="wrap"]/div[3]/div/div/div[1]/div/input')
-    id.send_keys('leedohyeon0502@gmail.com')
+chrome_options = webdriver.ChromeOptions()
+chrome_options.add_argument('--headless')
+chrome_options.add_argument('--disable-dev-shm-usage')
+browser = webdriver.Chrome()
 
-    pw = browser.find_element(By.XPATH, '//*[@id="wrap"]/div[3]/div/div/div[2]/div/input')
-    pw.send_keys('rkansdmldud1@')
+## login 
+browser.get(base_url+'/login')
+id = browser.find_element(By.XPATH, '//*[@id="wrap"]/div[3]/div/div/div[1]/div/input')
+id.send_keys('leedohyeon0502@gmail.com')
 
-    browser.find_element(By.XPATH, '//*[@id="wrap"]/div[3]/div/div/div[3]').click()
+pw = browser.find_element(By.XPATH, '//*[@id="wrap"]/div[3]/div/div/div[2]/div/input')
+pw.send_keys('rkansdmldud1@')
 
+browser.find_element(By.XPATH, '//*[@id="wrap"]/div[3]/div/div/div[3]').click()
+
+time.sleep(2)
+
+for crawling_item in crawling_items:
+    count = 0
+
+    sql = 'insert into product_sell_history(p_id, psh_option, psh_price, psh_is_quickly, psh_datetime) values'
+
+    browser.get(crawling_item['p_url'])
+    browser.find_element(By.CSS_SELECTOR, '.tab_content > .outlinegrey').click()
     time.sleep(2)
 
-    for crawling_item in crawling_items:
+    cur.execute(f'select count(*) as count, date(psh_datetime) as psh_datetime from product_sell_history where p_id = {crawling_item['p_id']} group by psh_datetime order by psh_datetime desc')
+    last_data = cur.fetchone()
+    if last_data == None:
+        last_data = {}
+        last_data['psh_datetime'] = datetime.strptime('2000-01-01', '%Y-%m-%d')
         count = 0
+    else:
+        last_data['psh_datetime'] = datetime.strptime(str(last_data['psh_datetime']), '%Y-%m-%d')
+        count = int(last_data['count'])
+    
+    scrollItem = browser.find_element(By.CSS_SELECTOR, '.market_price_table > .price_body')
+    
+    tmp = -1
+    scrollY = 0
+    while tmp != scrollY:
+        isbreak = False
 
-        sql = 'insert into product_sell_history(p_id, psh_option, psh_price, psh_is_quickly, psh_datetime) values'
-
-        browser.get(crawling_item['p_url'])
-        browser.find_element(By.CSS_SELECTOR, '.tab_content > .outlinegrey').click()
-        time.sleep(2)
-
-        cur.execute(f'select count(*) as count, date(psh_datetime) as psh_datetime from product_sell_history where p_id = {crawling_item['p_id']} group by psh_datetime order by psh_datetime desc')
-        last_data = cur.fetchone()
-        if last_data == None:
-            last_data = {}
-            last_data['psh_datetime'] = datetime.strptime('2000-01-01', '%Y-%m-%d')
-            count = 0
-        else:
-            last_data['psh_datetime'] = datetime.strptime(str(last_data['psh_datetime']), '%Y-%m-%d')
-            count = int(last_data['count'])
+        scrollY += 8000
+        tmp = browser.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
         
-        scrollItem = browser.find_element(By.CSS_SELECTOR, '.market_price_table > .price_body')
-        
-        tmp = -1
-        scrollY = 0
-        while tmp != scrollY:
-            isbreak = False
+        time.sleep(0.6)
 
-            scrollY += 8000
-            tmp = browser.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
+        scrollY += 8000
+        scrollY = browser.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
+
+        soup = BeautifulSoup(browser.page_source, 'html.parser')
+        browser_items = soup.select('.price_body > .body_list > .list_txt:nth-child(3) > span')
+
+        for i in browser_items:
+            date = datetime.strptime('20' + i.text.replace('/', '-'), '%Y-%m-%d')
             
-            time.sleep(0.6)
-
-            scrollY += 8000
-            scrollY = browser.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
-
-            soup = BeautifulSoup(browser.page_source, 'html.parser')
-            browser_items = soup.select('.price_body > .body_list > .list_txt:nth-child(3) > span')
-
-            for i in browser_items:
-                date = datetime.strptime('20' + i.text.replace('/', '-'), '%Y-%m-%d')
-                
-                
-                if date > last_data['psh_datetime']:
-                    isbreak = True
-                    break
-
-            if isbreak:
+            
+            if date > last_data['psh_datetime']:
+                isbreak = True
                 break
+
+        if isbreak:
+            break
+    
+    browser_items = soup.select('.price_body > .body_list')
+
+    insert_items = []
+    for item in browser_items:
+        txt_list = item.select('.list_txt')
+        option = txt_list[0].text
         
-        browser_items = soup.select('.price_body > .body_list')
-
-        insert_items = []
-        for item in browser_items:
-            txt_list = item.select('.list_txt')
-            option = txt_list[0].text
-            
-            price = re.sub(r'[,\s원-]','',txt_list[1].text)
-            price = int(price) if price != "" else 0
-            
-            date = ('20'+txt_list[2].select('span')[-1].text).replace('/', '-')
-            
-            quickly = 0 if item.select_one('.express_icon') != None else 1
-
-            insert_items.append({'option':option, 'price':price, 'date':date, 'quickly':quickly})
-
-        sorted_items = sorted(insert_items, key=lambda item: item['date'])
+        price = re.sub(r'[,\s원-]','',txt_list[1].text)
+        price = int(price) if price != "" else 0
         
-        valid_sql = False
-        for item in sorted_items:
-            date = datetime.strptime(item['date'], '%Y-%m-%d')
+        date = ('20'+txt_list[2].select('span')[-1].text).replace('/', '-')
+        
+        quickly = 0 if item.select_one('.express_icon') != None else 1
 
-            if date < last_data['psh_datetime']: 
+        insert_items.append({'option':option, 'price':price, 'date':date, 'quickly':quickly})
+
+    sorted_items = sorted(insert_items, key=lambda item: item['date'])
+    
+    valid_sql = False
+    for item in sorted_items:
+        date = datetime.strptime(item['date'], '%Y-%m-%d')
+
+        if date < last_data['psh_datetime']: 
+            continue
+        elif date == last_data['psh_datetime']:
+            if count > 0:
+                count -= 1
                 continue
-            elif date == last_data['psh_datetime']:
-                if count > 0:
-                    count -= 1
-                    continue
-            
-            sql += f'({crawling_item['p_id']}, \"{item['option']}\", {item['price']}, {item['quickly']}, \"{item['date']}\") ,'
-            valid_sql = True
         
-        if valid_sql:
-            sql = sql[0:-2]
-            cur.execute(sql)
-            conn.commit()
+        sql += f'({crawling_item['p_id']}, \"{item['option']}\", {item['price']}, {item['quickly']}, \"{item['date']}\") ,'
+        valid_sql = True
+    
+    if valid_sql:
+        sql = sql[0:-2]
+        cur.execute(sql)
+        conn.commit()
 
-    browser.quit()
-    conn.close()
+browser.quit()
+conn.close()
