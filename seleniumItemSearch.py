@@ -20,7 +20,6 @@ password = os.environ.get('DB_PASSWORD')
 db = os.environ.get('DB_TABLE')
 charset = os.environ.get('CHARSET')
 
-chrome_position = os.environ.get('CHROME_POSITION')
 file = open('crawling_log.txt', 'a', encoding='euc-kr')
 file.write(f'start bot1 at : {datetime.now()}\n')
 
@@ -32,12 +31,7 @@ chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument('--headless')
 chrome_options.add_argument('--disable-dev-shm-usage')
 
-
-if chrome_position:
-    browser = webdriver.Chrome(chrome_position,options=chrome_options)
-else:
-    browser = webdriver.Chrome(options=chrome_options)
-
+browser = webdriver.Chrome(options=chrome_options)
 
 try:
     cur.execute('select b_id, b_name from brand')

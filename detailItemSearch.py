@@ -21,7 +21,7 @@ password = os.environ.get('DB_PASSWORD')
 db = os.environ.get('DB_TABLE')
 charset = os.environ.get('CHARSET')
 
-chrome_position = os.environ.get('CHROME_POSITION')
+
 crawling_id = os.environ.get('CRAWLING_ID')
 crawling_pw = os.environ.get('CRAWLING_PW')
 
@@ -33,11 +33,7 @@ chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument('--headless')
 chrome_options.add_argument('--disable-dev-shm-usage')
 
-
-if chrome_position:
-    browser = webdriver.Chrome(chrome_position,options=chrome_options)
-else:
-    browser = webdriver.Chrome(options=chrome_options)
+browser = webdriver.Chrome(options=chrome_options)
 
 
 try:
