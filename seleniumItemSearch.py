@@ -90,7 +90,7 @@ try:
                 
                 for item in items:
                     tmp = items[item]
-                    cur.execute(f'select * from product where p_url = "{tmp['url']}"')
+                    cur.execute(f'select * from product where p_url = "{tmp["url"]}"')
                     result = cur.fetchall()
                     before_sales = 0
                     
