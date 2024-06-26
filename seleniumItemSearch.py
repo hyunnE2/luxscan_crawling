@@ -15,9 +15,9 @@ load_dotenv()
 
 base_url = os.environ.get('BASE_URL')
 host = os.environ.get('HOST')
-user = os.environ.get('USER')
-password = os.environ.get('PASSWORD')
-db = os.environ.get('DB')
+user = os.environ.get('DB_USER')
+password = os.environ.get('DB_PASSWORD')
+db = os.environ.get('DB_TABLE')
 charset = os.environ.get('CHARSET')
 
 file = open('crawling_log.txt', 'a', encoding='euc-kr')
