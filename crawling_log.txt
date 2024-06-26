@@ -1,0 +1,45 @@
+start bot1 at : 2024-06-26 19:09:46.143439
+start bot1 at : 2024-06-26 19:10:06.105737
+start bot1 at : 2024-06-26 19:10:17.372268
+start bot1 at : 2024-06-26 19:11:10.683112
+start bot1 at : 2024-06-26 19:11:59.617258
+start bot1 at : 2024-06-26 19:13:00.164893
+error bot1 : Traceback (most recent call last):
+  File "c:\Users\leedo\work\luxscan\luxscan-crawling\seleniumItemSearch.py", line 63, in <module>
+    tmp = scrollY = browser.execute_script(f'window.scrollTo(0, {scrollY}); return window.scrollY')
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\leedo\AppData\Local\Programs\Python\Python312\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 407, in execute_script
+    return self.execute(command, {"script": script, "args": converted_args})["value"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\leedo\AppData\Local\Programs\Python\Python312\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 347, in execute
+    self.error_handler.check_response(response)
+  File "C:\Users\leedo\AppData\Local\Programs\Python\Python312\Lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 229, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.WebDriverException: Message: disconnected: not connected to DevTools
+  (failed to check if window was closed: disconnected: not connected to DevTools)
+  (Session info: chrome=126.0.6478.115)
+Stacktrace:
+	GetHandleVerifier [0x00007FF7F29D3E62+31618]
+	(No symbol) [0x00007FF7F294B0C9]
+	(No symbol) [0x00007FF7F280888A]
+	(No symbol) [0x00007FF7F27EFBEC]
+	(No symbol) [0x00007FF7F27EFAB0]
+	(No symbol) [0x00007FF7F280AEB1]
+	(No symbol) [0x00007FF7F289C159]
+	(No symbol) [0x00007FF7F287CEB3]
+	(No symbol) [0x00007FF7F284A46B]
+	(No symbol) [0x00007FF7F284B001]
+	GetHandleVerifier [0x00007FF7F2CDA03D+3202397]
+	GetHandleVerifier [0x00007FF7F2D26A5D+3516285]
+	GetHandleVerifier [0x00007FF7F2D1C4D0+3473904]
+	GetHandleVerifier [0x00007FF7F2A85D66+760454]
+	(No symbol) [0x00007FF7F2956B6F]
+	(No symbol) [0x00007FF7F2951D04]
+	(No symbol) [0x00007FF7F2951E92]
+	(No symbol) [0x00007FF7F294123F]
+	BaseThreadInitThunk [0x00007FF85D6F257D+29]
+	RtlUserThreadStart [0x00007FF85F72AF28+40]
+
+
+end bot1 at : 2024-06-26 19:13:05.810875
+

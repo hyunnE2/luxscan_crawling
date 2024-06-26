@@ -5,6 +5,7 @@ import re
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -29,9 +30,13 @@ cur = conn.cursor()
 ## login 
 chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument('--headless')
+chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
 
-browser = webdriver.Chrome(options=chrome_options)
+exe_chromedriver_path = os.environ.get('EXECUTABLE_CHROMEDRIVER_PATH')
+service = Service(executable_path=exe_chromedriver_path)
+
+browser = webdriver.Chrome(service=service, options=chrome_options)
 
 try:
     cur.execute('select b_id, b_name from brand')
