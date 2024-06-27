@@ -28,7 +28,6 @@ cur = conn.cursor()
 
 ## login 
 chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument('--headless')
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
 
@@ -82,7 +81,6 @@ try:
 
                     items[item_name]['url'] = base_url+browser_item.select_one('.item_inner')['href']
                     items[item_name]['img_url'] = browser_item.select_one('.product_img > img')['src']
-
                 
                 js_items = browser.execute_script("return window.__NUXT__.state['search-tab']['productFeed']['items']")
                 
