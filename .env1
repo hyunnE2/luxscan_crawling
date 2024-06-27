@@ -1,0 +1,9 @@
+BASE_URL='https://kream.co.kr'
+HOST='222.239.231.65'
+USER='admin'
+PASSWORD='Hopaes001$$'
+DB='luxscan_crawling_data'
+CHARSET='utf8'
+
+CRAWLING_ID='youloveamazon@gmail.com'
+CRAWLING_PW='Hopaes001$$'
