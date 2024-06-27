@@ -4,7 +4,7 @@ import pymysql
 import re
 
 from selenium import webdriver
-from selenium.webdriver.common.by import By
+
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -20,7 +20,7 @@ password = os.environ.get('DB_PASSWORD')
 db = os.environ.get('DB_TABLE')
 charset = os.environ.get('CHARSET')
 
-file = open('crawling_log.txt', 'a', encoding='euc-kr')
+file = open('crawling.log', 'a', encoding='euc-kr')
 file.write(f'start bot1 at : {datetime.now()}\n')
 
 conn = pymysql.connect(host=host, user=user, password=password, db=db, charset=charset)
@@ -28,8 +28,11 @@ cur = conn.cursor()
 
 ## login 
 chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument('--no-sandbox')
-chrome_options.add_argument('--disable-dev-shm-usage')
+chrome_options.add_argument("--headless=new")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--window-size=1920x1080")
 
 exe_chromedriver_path = os.environ.get('EXECUTABLE_CHROMEDRIVER_PATH')
 
@@ -52,6 +55,7 @@ try:
                     continue
                 gender = 'men' if i == 0 else 'woman'
                 browser.get(f'https://kream.co.kr/brands/{brand[1]}?tab=44&gender={gender}&shop_category_id={category[0]}&sort=popular_score')
+                file.write(f'bot1 get_url :  https://kream.co.kr/brands/{brand[1]}?tab=44&gender={gender}&shop_category_id={category[0]}&sort=popular_score\n')
                 time.sleep(1)
 
                 tmp = -1
@@ -68,7 +72,8 @@ try:
                 soup = BeautifulSoup(browser.page_source, 'html.parser')
 
                 browser_items = soup.select('.search_result_list > .search_result_item')
-                
+                print(soup.text)
+
                 for browser_item in browser_items:
                     item_name = browser_item.select_one('.product_info_product_name > .name').text
                     items[item_name] = {}

@@ -25,11 +25,12 @@ charset = os.environ.get('CHARSET')
 crawling_id = os.environ.get('CRAWLING_ID')
 crawling_pw = os.environ.get('CRAWLING_PW')
 
-file = open('crawling_log.txt', 'a', encoding='euc-kr')
+file = open('crawling.log', 'a', encoding='euc-kr')
 file.write(f'start bot2 at : {datetime.now()}\n')
 
 # setting chrome options
 chrome_options = webdriver.ChromeOptions()
+chrome_options.add_argument('--headless')
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
 
