@@ -54,8 +54,8 @@ try:
     
     
     if len(crawling_items) > 0:
-        file.write(f'bot2 : delete {crawling_items[0]['cpl_id']} ~ {crawling_items[-1]['cpl_id']}\n')
-        cur.execute(f'delete from crawling_product_list where cpl_id >= {crawling_items[0]['cpl_id']} and cpl_id <= {crawling_items[-1]['cpl_id']}')
+        file.write(f'bot2 : delete {crawling_items[0]["cpl_id"]} ~ {crawling_items[-1]["cpl_id"]}\n')
+        cur.execute(f'delete from crawling_product_list where cpl_id >= {crawling_items[0]["cpl_id"]} and cpl_id <= {crawling_items[-1]["cpl_id"]}')
         if len(crawling_items) < 999:
             cur.execute(f'truncate crawling_product_list')    
     else:
@@ -88,7 +88,7 @@ try:
         browser.find_element(By.CSS_SELECTOR, '.tab_content > .outlinegrey').click()
         
 
-        cur.execute(f'select count(*) as count, date(psh_datetime) as psh_datetime from product_sell_history where p_id = {crawling_item['p_id']} group by psh_datetime order by psh_datetime desc')
+        cur.execute(f'select count(*) as count, date(psh_datetime) as psh_datetime from product_sell_history where p_id = {crawling_item["p_id"]} group by psh_datetime order by psh_datetime desc')
         last_data = cur.fetchone()
         if last_data == None:
             last_data = {}
@@ -156,7 +156,7 @@ try:
                     count -= 1
                     continue
             
-            sql += f'({crawling_item['p_id']}, \"{item['option']}\", {item['price']}, {item['quickly']}, \"{item['date']}\") ,'
+            sql += f'({crawling_item["p_id"]}, \"{item["option"]}\", {item["price"]}, {item["quickly"]}, \"{item["date"]}\") ,'
             valid_sql = True
         
         if valid_sql:
