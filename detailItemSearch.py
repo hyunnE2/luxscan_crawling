@@ -68,6 +68,7 @@ try:
 
     ## login 
     browser.get(base_url+'/login')
+    time.sleep(2)
     id = browser.find_element(By.XPATH, '//*[@id="wrap"]/div[3]/div/div/div[1]/div/input')
     id.send_keys(crawling_id)
 
