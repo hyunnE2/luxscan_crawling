@@ -67,7 +67,7 @@ try:
                     scrollY += 8000
                     tmp = scrollY = browser.execute_script(f'window.scrollTo(0, {scrollY}); return window.scrollY')
                     
-                    time.sleep(0.6)
+                    time.sleep(1)
                     scrollY += 8000
                     scrollY = browser.execute_script(f'window.scrollTo(0, {scrollY}); return window.scrollY')
                 time.sleep(2)
