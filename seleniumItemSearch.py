@@ -42,7 +42,7 @@ browser.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5
 browser.execute_cdp_cmd('Network.enable', {})
 
 try:
-    cur.execute('select b_id, b_name from brand where b_name = "Adidas"')
+    cur.execute('select b_id, b_name from brand')
     brands = cur.fetchall()
 
     cur.execute('select c_id, c_name, c_is_men, c_is_woman as c from category')
