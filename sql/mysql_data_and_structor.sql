@@ -1,4 +1,3 @@
-
 USE luxscan_crawling_data;
 
 
@@ -64,7 +63,7 @@ CREATE TABLE `product` (
   `p_last_crawling_datetime` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`p_id`),
   UNIQUE KEY `p_url_unique` (`p_url`),
-  KEY `p_url` (`p_url`) /*!80000 INVISIBLE */
+  KEY `p_url` (`p_url`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
@@ -77,4 +76,16 @@ CREATE TABLE `product_sell_history` (
   `psh_price` int DEFAULT NULL,
   `psh_is_quickly` tinyint DEFAULT NULL,
   PRIMARY KEY (`psh_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+DROP TABLE IF EXISTS `price_by_size_of_product`;
+CREATE TABLE `price_by_size_of_product` (
+	`pbsop_id` INT NOT NULL AUTO_INCREMENT,
+	`p_id` INT DEFAULT NULL,
+	`pbsop_size` VARCHAR(20) DEFAULT NULL,
+	`pbsop_price` INT,
+	`pbsop_quick_price` INT,
+	`pbsop_datetime` DATETIME DEFAULT CURRENT_TIMESTAMP,
+	 PRIMARY KEY (`pbsop_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
