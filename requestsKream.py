@@ -24,7 +24,7 @@ db = os.environ.get('DB_TABLE')
 charset = os.environ.get('CHARSET')
 
 
-file = open('crawling.log', 'a', encoding='euc-kr')
+file = open('crawling(bot_3).log', 'a', encoding='euc-kr')
 file.write(f'start bot3 at : {datetime.now()}\n')
 
 
