@@ -73,7 +73,7 @@ try:
                         fast_price = item['lowest_100']
                     else:
                         fast_price = 0
-                    cur.execute(f"insert into price_by_option_of_product(`p_id`, `pboop_option`, `pboop_price`, `pboop_quick_price`) values ({product['p_id']},'{item["option"]}',{price},{fast_price}) on DUPLICATE KEY UPDATE `pboop_price` = {price}, `pboop_quick_price` = {fast_price}, `pboop_datetime` = '{datetime.now()}'")          
+                    cur.execute(f"insert into price_by_option_of_product(`p_id`, `pboop_option`, `pboop_price`, `pboop_quick_price`) values ({product['p_id']},'{item['option']}',{price},{fast_price}) on DUPLICATE KEY UPDATE `pboop_price` = {price}, `pboop_quick_price` = {fast_price}, `pboop_datetime` = '{datetime.now()}'")          
                     
         else:
             print(f"Failed to retrieve the web page. Status code: {response.status_code}")
