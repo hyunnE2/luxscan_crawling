@@ -34,13 +34,13 @@ headers = {
     'user-agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Whale/3.26.244.21 Safari/537.36',
 }
 
-print('start at bot3 :', datetime.now())
-
 try:
     conn = pymysql.connect(host=host, user=user, password=password, db=db, charset=charset)
     cur = conn.cursor(pymysql.cursors.DictCursor)
     cur.execute('select * from product')
     products = cur.fetchall()
+
+    file.write(f'bot3 : loaded products {len(products)}\n')
 
     for product in products:
         response = session.get(product['p_url'], headers=headers)
@@ -51,7 +51,7 @@ try:
             script_end = html_content.find("</script>", script_start)
             
             if script_start == -1 or script_end == -1:
-                print("script not found")
+                file.write("script not found\n")
             else:
                 script_content = html_content[script_start:script_end]
 
@@ -76,8 +76,9 @@ try:
                     cur.execute(f"insert into price_by_option_of_product(`p_id`, `pboop_option`, `pboop_price`, `pboop_quick_price`) values ({product['p_id']},'{item['option']}',{price},{fast_price}) on DUPLICATE KEY UPDATE `pboop_price` = {price}, `pboop_quick_price` = {fast_price}, `pboop_datetime` = '{datetime.now()}'")          
                     
         else:
-            print(f"Failed to retrieve the web page. Status code: {response.status_code}")
-        print('end at :', datetime.now())
+            file.write(f"Failed to retrieve the web page. p_id : {product['p_id']}\n")
+        file.write(f'{product["p_id"]} end at :{datetime.now()}\n')
+        file.flush()
 
         conn.commit()
 
@@ -95,7 +96,7 @@ try:
         result['datetime'].append(row['pboop_datetime'])
     
     with pd.ExcelWriter('kream_test_data.xlsx', engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-        print('writing')
+        file.write('writing\n')
         pd.DataFrame(result).to_excel(writer, sheet_name='result_sheet', index=False)
 
 except Exception:
