@@ -1,69 +1,51 @@
 import requests
 import json
-import time
-import datetime
 
-from selenium import webdriver
+import pymysql
+import pymysql.cursors
+import traceback
+
 import pandas as pd
-from selenium.webdriver.common.by import By
+
+from datetime import datetime
 from py_mini_racer import py_mini_racer
 
+from dotenv import load_dotenv
+import os
 
-LOGIN_URL = 'https://kream.co.kr/login'
-USERNAME = 'youloveamazon@gmail.com'
-PASSWORD = 'Hopaes001$$'
+load_dotenv()
+
+
+base_url = os.environ.get('BASE_URL')
+host = os.environ.get('HOST')
+user = os.environ.get('DB_USER')
+password = os.environ.get('DB_PASSWORD')
+db = os.environ.get('DB_TABLE')
+charset = os.environ.get('CHARSET')
+
+
+file = open('crawling.log', 'a', encoding='euc-kr')
+file.write(f'start bot3 at : {datetime.now()}\n')
 
 
 session = requests.Session()
-
-chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument("--headless=new")
-chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_argument("--window-size=1920x1080")
-chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-
-
-browser = webdriver.Chrome('C:/Users/leedo/Downloads/chromedriver-win64/chromedriver-win64/chromedriver.exe', options=chrome_options)
-
-browser.get(LOGIN_URL)
-time.sleep(2)
-id = browser.find_element(By.XPATH, '//*[@id="wrap"]/div[3]/div/div/div[1]/div/input')
-id.send_keys(USERNAME)
-
-pw = browser.find_element(By.XPATH, '//*[@id="wrap"]/div[3]/div/div/div[2]/div/input')
-pw.send_keys(PASSWORD)
-
-browser.find_element(By.XPATH, '//*[@id="wrap"]/div[3]/div/div/div[3]').click()
-
-time.sleep(2)
-
-for cookie in browser.get_cookies():
-    c = {cookie['name'] : cookie['value']}
-    session.cookies.update(c)
-
-browser.close()
-
 
 headers = {
     'user-agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Whale/3.26.244.21 Safari/537.36',
 }
 
-print('start at : ', datetime.datetime.now())
+print('start at :', datetime.now())
 
-file_name = 'kream_test_data.xlsx'
-df = pd.read_excel(file_name, sheet_name='refer_sheet', header=None, engine='openpyxl').fillna('__NOT_DATA__')
+try:
+    conn = pymysql.connect(host=host, user=user, password=password, db=db, charset=charset)
+    cur = conn.cursor(pymysql.cursors.DictCursor)
+    cur.execute('select * from product')
+    products = cur.fetchall()
 
-result_frame = {'참고 열': [], '사이즈': [], '현재 빠른 배송': [], '일반 배송': [], '최신 수집일': []}
-for r_index in range(0, len(df.index)):
-    refer_col = 'A'+str(r_index+1)
-    print(len(df.index), '/',(r_index+1))
-
-    if df.loc[r_index].values[0] != '__NOT_DATA__':
-        response = session.get(df.loc[r_index].values[0], headers=headers)
+    for product in products:
+        response = session.get(product['p_url'], headers=headers)
         html_content = response.text
-
+        
         if response.status_code == 200:
             script_start = html_content.find("window.__NUXT__=")
             script_end = html_content.find("</script>", script_start)
@@ -82,30 +64,45 @@ for r_index in range(0, len(df.index)):
                 nuxt_data = ctx.eval("JSON.stringify(window.__NUXT__.state.product.response.sales_options)")
 
                 for item in json.loads(nuxt_data):
-                    if 'lowest_normal' in item['product_option']:
-                        fast_price = item['product_option']['lowest_normal']
+                    if item['lowest_normal'] != None:
+                        price = item['lowest_normal']
                     else:
-                        fast_price = '0'
+                        price = 0
 
-                    if 'lowest_100' in item['product_option']:
-                        price = item['product_option']['lowest_100']
+                    if item['lowest_100'] != None:
+                        fast_price = item['lowest_100']
                     else:
-                        price = '0'
-
-                    result_frame['참고 열'].append(refer_col)
-                    result_frame['사이즈'].append(item['option'])
-                    result_frame['일반 배송'].append(price)
-                    result_frame['현재 빠른 배송'].append(fast_price)
-                    result_frame['최신 수집일'].append(datetime.datetime.now())
+                        fast_price = 0
+                    cur.execute(f"insert into price_by_option_of_product(`p_id`, `pboop_option`, `pboop_price`, `pboop_quick_price`) values ({product['p_id']},'{item["option"]}',{price},{fast_price}) on DUPLICATE KEY UPDATE `pboop_price` = {price}, `pboop_quick_price` = {fast_price}, `pboop_datetime` = '{datetime.now()}'")          
+                    
         else:
             print(f"Failed to retrieve the web page. Status code: {response.status_code}")
-            
-        print('end at : ', datetime.datetime.now())
-    else:
-        print('__NOT_FOUND__')
+        print('end at :', datetime.now())
 
-print(result_frame)
+        conn.commit()
 
-with pd.ExcelWriter(file_name, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-    print('writing')
-    pd.DataFrame(result_frame).to_excel(writer, sheet_name='result_sheet', index=False)
+    cur.execute('select p_name, p_url, pboop_option, pboop_price, pboop_quick_price, pboop_datetime from price_by_option_of_product join product on price_by_option_of_product.p_id = product.p_id')
+    rows = cur.fetchall()
+    
+    result = {'name':[],'url':[],'option':[],'price':[],'quick_price':[],'datetime':[]}
+
+    for row in rows:
+        result['name'].append(row['p_name'])
+        result['url'].append(row['p_url'])
+        result['option'].append(row['pboop_option'])
+        result['price'].append(row['pboop_price'])
+        result['quick_price'].append(row['pboop_quick_price'])
+        result['datetime'].append(row['pboop_datetime'])
+    
+    with pd.ExcelWriter('kream_test_data.xlsx', engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+        print('writing')
+        pd.DataFrame(result).to_excel(writer, sheet_name='result_sheet', index=False)
+
+except Exception:
+    err = traceback.format_exc()
+    file.write(f'error bot3 : {err}\n')
+
+file.write(f'ended bot3 at : {datetime.now()}\n')
+
+conn.close()
+file.close()

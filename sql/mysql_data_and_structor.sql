@@ -81,11 +81,12 @@ CREATE TABLE `product_sell_history` (
 
 DROP TABLE IF EXISTS `price_by_option_of_product`;
 CREATE TABLE `price_by_option_of_product` (
-	`pbsop_id` INT NOT NULL AUTO_INCREMENT,
+	`pboop_id` INT NOT NULL AUTO_INCREMENT,
 	`p_id` INT DEFAULT NULL,
-	`pbsop_option` VARCHAR(20) DEFAULT NULL,
-	`pbsop_price` INT,
-	`pbsop_quick_price` INT,
-	`pbsop_datetime` DATETIME DEFAULT CURRENT_TIMESTAMP,
-	 PRIMARY KEY (`pbsop_id`)
+	`pboop_option` VARCHAR(20) DEFAULT NULL,
+	`pboop_price` INT,
+	`pboop_quick_price` INT,
+	`pboop_datetime` DATETIME DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (`pboop_id`),
+  UNIQUE KEY `pboop_unique_key` (`p_id`,`pboop_option`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
