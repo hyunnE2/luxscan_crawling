@@ -34,7 +34,7 @@ headers = {
     'user-agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Whale/3.26.244.21 Safari/537.36',
 }
 
-print('start at :', datetime.now())
+print('start at bot3 :', datetime.now())
 
 try:
     conn = pymysql.connect(host=host, user=user, password=password, db=db, charset=charset)
