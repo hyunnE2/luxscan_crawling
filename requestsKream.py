@@ -14,8 +14,12 @@ from py_mini_racer import py_mini_racer
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
+from fake_useragent import UserAgent
 
+ua = UserAgent()
+ua.browsers.remove('chrome')
+
+load_dotenv()
 
 base_url = os.environ.get('BASE_URL')
 host = os.environ.get('HOST')
@@ -28,12 +32,7 @@ charset = os.environ.get('CHARSET')
 file = open('crawling(bot_3).log', 'a', encoding='euc-kr')
 file.write(f'start bot3 at : {datetime.now()}\n')
 
-
 session = requests.Session()
-
-headers = {
-    'user-agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Whale/3.26.244.21 Safari/537.36',
-}
 
 try:
     conn = pymysql.connect(host=host, user=user, password=password, db=db, charset=charset)
@@ -43,19 +42,35 @@ try:
 
     file.write(f'bot3 : loaded products {len(products)}\n')
 
+    i = 0
     for product in products:
-        response = session.get(product['p_url'], headers=headers)
+        if i % 400 == 0:            
+            headers = {
+                'user-agent' : ua.random,
+            }
+            
+            response = session.get(product['p_url'], headers=headers)
+            for j in range(0, 5):
+                headers = {
+                    'user-agent' : ua.random,
+                }
+                response = session.get(product['p_url'], headers=headers)
+
+                if response.status_code == 200:
+                    break
+        else:
+            response = session.get(product['p_url'], headers=headers)
+
         html_content = response.text
         
         if response.status_code == 200:
             script_start = html_content.find("window.__NUXT__=")
             script_end = html_content.find("</script>", script_start)
-            
             if script_start == -1 or script_end == -1:
                 file.write("script not found\n")
             else:
                 script_content = html_content[script_start:script_end]
-
+                
                 ctx = py_mini_racer.MiniRacer()
 
                 ctx.eval("window={};")
@@ -63,28 +78,43 @@ try:
                 ctx.eval(script_content)
 
                 nuxt_data = ctx.eval("JSON.stringify(window.__NUXT__.state.product.response.sales_options)")
+                if nuxt_data == None:
+                    nuxt_data = ctx.eval("JSON.stringify(window.__NUXT__.state.product.response.sale_info.details.options)")
 
-                for item in json.loads(nuxt_data):
-                    if item['lowest_normal'] != None:
-                        price = item['lowest_normal']
-                    else:
-                        price = 0
+                    for item in json.loads(nuxt_data):
+                        if item['is_show_option_price'] == False: continue
 
-                    if item['lowest_100'] != None:
-                        fast_price = item['lowest_100']
-                    else:
+                        if item['price'] != None:
+                            price = item['price']
+                        else:
+                            price = 0
                         fast_price = 0
-                    cur.execute(f"insert into price_by_option_of_product(`p_id`, `pboop_option`, `pboop_price`, `pboop_quick_price`) values ({product['p_id']},'{item['option']}',{price},{fast_price}) on DUPLICATE KEY UPDATE `pboop_price` = {price}, `pboop_quick_price` = {fast_price}, `pboop_datetime` = '{datetime.now()}'")          
-                    
+                        cur.execute(f"insert into price_by_option_of_product(`p_id`, `pboop_option`, `pboop_price`, `pboop_quick_price`) values ({product['p_id']},'{item['key']}',{price},{fast_price}) on DUPLICATE KEY UPDATE `pboop_price` = {price}, `pboop_quick_price` = {fast_price}, `pboop_datetime` = '{datetime.now()}'")          
+                else:    
+                    for item in json.loads(nuxt_data):
+                        if item['lowest_normal'] != None:
+                            price = item['lowest_normal']
+                        else:
+                            price = 0
+
+                        if item['lowest_100'] != None:
+                            fast_price = item['lowest_100']
+                        else:
+                            fast_price = 0
+                        cur.execute(f"insert into price_by_option_of_product(`p_id`, `pboop_option`, `pboop_price`, `pboop_quick_price`) values ({product['p_id']},'{item['option']}',{price},{fast_price}) on DUPLICATE KEY UPDATE `pboop_price` = {price}, `pboop_quick_price` = {fast_price}, `pboop_datetime` = '{datetime.now()}'")          
+            print(f"success. p_id : {product['p_id']}")
+            file.write(f"sucess. p_id : {product['p_id']}\n")     
         else:
             print(f"Failed to retrieve the web page status={response.status_code}. p_id : {product['p_id']}\n")
             file.write(f"Failed to retrieve the web page status={response.status_code}. p_id : {product['p_id']}\n")
-        file.write(f'{product["p_id"]} end at :{datetime.now()}\n')
+            break
+        
+        file.write(f'p_id : {product["p_id"]} end at :{datetime.now()}\n')
         file.flush()
 
         conn.commit()
-        
-        time.sleep(1)
+
+        i += 1
 
     cur.execute('select p_name, p_url, pboop_option, pboop_price, pboop_quick_price, pboop_datetime from price_by_option_of_product join product on price_by_option_of_product.p_id = product.p_id')
     rows = cur.fetchall()
