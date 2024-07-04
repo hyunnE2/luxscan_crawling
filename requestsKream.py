@@ -48,6 +48,7 @@ try:
             headers = {
                 'user-agent' : ua.random,
             }
+            print('change user-agent')
             
             response = session.get(product['p_url'], headers=headers)
             for j in range(0, 5):
@@ -108,7 +109,7 @@ try:
             print(f"Failed to retrieve the web page status={response.status_code}. p_id : {product['p_id']}\n")
             file.write(f"Failed to retrieve the web page status={response.status_code}. p_id : {product['p_id']}\n")
             break
-        
+
         file.write(f'p_id : {product["p_id"]} end at :{datetime.now()}\n')
         file.flush()
 

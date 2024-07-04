@@ -80,7 +80,8 @@ try:
 
         browser.get(crawling_item['p_url'])
         time.sleep(2)
-
+        print(1, browser.find_element(By.CSS_SELECTOR, '.tab_content'))
+        print(2,browser.find_element(By.CSS_SELECTOR, '.tab_content > .outlinegrey'))
         browser.find_element(By.CSS_SELECTOR, '.tab_content > .outlinegrey').click()        
 
         cur.execute(f'select count(*) as count, date(psh_datetime) as psh_datetime from product_sell_history where p_id = {crawling_item["p_id"]} group by psh_datetime order by psh_datetime desc')
