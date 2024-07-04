@@ -86,10 +86,12 @@ try:
 
         sql = 'insert into product_sell_history(p_id, psh_option, psh_price, psh_is_quickly, psh_datetime) values'
 
+        file.write(f'bot2 crawling url : {crawling_item['p_url']}\n')
+
         browser.get(crawling_item['p_url'])
         time.sleep(2)
-        browser.find_element(By.CSS_SELECTOR, '.tab_content > .outlinegrey').click()
-        
+
+        browser.find_element(By.CSS_SELECTOR, '.tab_content > .outlinegrey').click()        
 
         cur.execute(f'select count(*) as count, date(psh_datetime) as psh_datetime from product_sell_history where p_id = {crawling_item["p_id"]} group by psh_datetime order by psh_datetime desc')
         last_data = cur.fetchone()
