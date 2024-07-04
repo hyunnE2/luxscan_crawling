@@ -77,6 +77,7 @@ try:
                     cur.execute(f"insert into price_by_option_of_product(`p_id`, `pboop_option`, `pboop_price`, `pboop_quick_price`) values ({product['p_id']},'{item['option']}',{price},{fast_price}) on DUPLICATE KEY UPDATE `pboop_price` = {price}, `pboop_quick_price` = {fast_price}, `pboop_datetime` = '{datetime.now()}'")          
                     
         else:
+            print(f"Failed to retrieve the web page status={response.status_code}. p_id : {product['p_id']}\n")
             file.write(f"Failed to retrieve the web page status={response.status_code}. p_id : {product['p_id']}\n")
         file.write(f'{product["p_id"]} end at :{datetime.now()}\n')
         file.flush()
