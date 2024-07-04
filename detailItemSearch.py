@@ -86,7 +86,7 @@ try:
 
         sql = 'insert into product_sell_history(p_id, psh_option, psh_price, psh_is_quickly, psh_datetime) values'
 
-        file.write(f'bot2 crawling url : {crawling_item['p_url']}\n')
+        file.write(f'bot2 crawling url : {crawling_item["p_url"]}\n')
 
         browser.get(crawling_item['p_url'])
         time.sleep(2)
