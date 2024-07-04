@@ -84,6 +84,11 @@ try:
                     items[item_name]['brand_id'] = 63
                     items[item_name]['kr_name'] = browser_item.select_one('.product_info_product_name > .translated_name').text
                     items[item_name]['price'] = re.sub(r'[,\s원-]','',browser_item.select_one('.price > .amount').text)
+
+                    discount_rate = browser_item.select_one('.price > .amount > .discount_rate')
+                    if discount_rate != None:
+                        items[item_name]['price'] = items[item_name]['price'].replace(discount_rate.text, '')
+
                     items[item_name]['price'] = int(items[item_name]['price']) if items[item_name]['price'] != "" else 0
 
                     items[item_name]['url'] = base_url+browser_item.select_one('.item_inner')['href']
