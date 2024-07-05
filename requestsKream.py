@@ -1,6 +1,7 @@
 import time
 import requests
 import json
+from openpyxl import Workbook, load_workbook
 
 import pymysql
 import pymysql.cursors
@@ -44,7 +45,7 @@ try:
 
     i = 0
     for product in products:
-        if i % 400 == 0:            
+        if i % 400 == 0:
             headers = {
                 'user-agent' : ua.random,
             }
@@ -130,6 +131,14 @@ try:
         result['quick_price'].append(row['pboop_quick_price'])
         result['datetime'].append(row['pboop_datetime'])
     
+
+    if not os.path.exists('kream_test_data.xlsx'):
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "result_sheet"
+
+        wb.save('kream_test_data.xlsx')
+
 
     with pd.ExcelWriter('kream_test_data.xlsx', engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
         file.write('writing\n')
