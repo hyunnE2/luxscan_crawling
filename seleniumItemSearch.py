@@ -81,7 +81,7 @@ try:
                     items[item_name] = {}
                     items[item_name]['name'] = item_name
                     items[item_name]['market_id'] = 1
-                    items[item_name]['brand_id'] = 63
+                    items[item_name]['brand_id'] = brand[0]
                     items[item_name]['kr_name'] = browser_item.select_one('.product_info_product_name > .translated_name').text
                     items[item_name]['price'] = re.sub(r'[,\s원-]','',browser_item.select_one('.price > .amount').text)
 
@@ -126,9 +126,12 @@ try:
                         cur.execute('insert into crawling_product_list(p_id) values(%s)',(item_id))
 
 
-                conn.commit()     
+                conn.commit()  
             file.write(f'bot1 : {brand} {category} ended : {datetime.now()}\n')
             file.flush()
+
+        cur.execute(f'update brand set b_update_at = "{datetime.now()}" where b_id = "{brand[0]}"')
+        conn.commit()
 
 except Exception:
     err = traceback.format_exc()
