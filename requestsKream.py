@@ -29,6 +29,8 @@ password = os.environ.get('DB_PASSWORD')
 db = os.environ.get('DB_TABLE')
 charset = os.environ.get('CHARSET')
 
+excel_path = os.environ.get('EXCEL_PATH')
+excel_path = excel_path +'kream_test_data.xlsx'
 
 file = open('crawling(bot_3).log', 'a', encoding='euc-kr')
 file.write(f'start bot3 at : {datetime.now()}\n')
@@ -129,6 +131,7 @@ try:
         conn.commit()
 
         i += 1
+        break
 
     cur.execute("select p_name, p_url, pboop_option, pboop_price, pboop_quick_price, pboop_datetime from price_by_option_of_product join product on price_by_option_of_product.p_id = product.p_id")
     rows = cur.fetchall()
@@ -143,8 +146,8 @@ try:
         result['quick_price'].append(row['pboop_quick_price'])
         result['datetime'].append(row['pboop_datetime'])
     
-
-    if not os.path.exists('kream_test_data.xlsx'):
+    
+    if not os.path.exists(excel_path):
         wb = Workbook()
         ws = wb.active
         ws.title = "result_sheet"
@@ -152,7 +155,7 @@ try:
         wb.save('kream_test_data.xlsx')
 
 
-    with pd.ExcelWriter('kream_test_data.xlsx', engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+    with pd.ExcelWriter(excel_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
         file.write('writing\n')
         pd.DataFrame(result).to_excel(writer, sheet_name='result_sheet', index=False)
 
