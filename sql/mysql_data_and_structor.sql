@@ -26,7 +26,8 @@ INSERT INTO `category` VALUES (1,'스니커즈',1,1),(20,'패딩',1,1),(21,'코�
 DROP TABLE IF EXISTS `config`;
 CREATE TABLE `config` (
   `cfg_key` varchar(255) NOT NULL,
-  `cfg_value` text NOT NULL
+  `cfg_value` text NOT NULL,
+  index config_cfg_index_key (cfg_key)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 

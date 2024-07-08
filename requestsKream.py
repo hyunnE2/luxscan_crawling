@@ -38,10 +38,20 @@ session = requests.Session()
 try:
     conn = pymysql.connect(host=host, user=user, password=password, db=db, charset=charset)
     cur = conn.cursor(pymysql.cursors.DictCursor)
-    cur.execute('select * from product')
+
+    cur.execute("select * from config where cfg_key = 'crawled_p_id'")
+    crawled_p_id = cur.fetchone()
+
+    if crawled_p_id == None:
+        cur.execute("insert into config(cfg_key, cfg_value) values('crawled_p_id', 0)")
+        crawled_p_id = 0
+    else:
+        crawled_p_id = crawled_p_id['cfg_value']
+
+    cur.execute(f"select * from product where p_id > {crawled_p_id} limit 500")
     products = cur.fetchall()
 
-    file.write(f'bot3 : loaded products {len(products)}\n')
+    file.write(f"bot3 : loaded products {len(products)}\n")
 
     i = 0
     for product in products:
@@ -109,16 +119,18 @@ try:
         else:
             print(f"Failed to retrieve the web page status={response.status_code}. p_id : {product['p_id']}\n")
             file.write(f"Failed to retrieve the web page status={response.status_code}. p_id : {product['p_id']}\n")
+            cur.execute(f"update config set cfg_value = {product['p_id']-1} where cfg_key = 'crawled_p_id'")
             break
+        cur.execute(f"update config set cfg_value = {product['p_id']} where cfg_key = 'crawled_p_id'")
 
-        file.write(f'p_id : {product["p_id"]} end at :{datetime.now()}\n')
+        file.write(f"p_id : {product['p_id']} end at :{datetime.now()}\n")
         file.flush()
 
         conn.commit()
 
         i += 1
 
-    cur.execute('select p_name, p_url, pboop_option, pboop_price, pboop_quick_price, pboop_datetime from price_by_option_of_product join product on price_by_option_of_product.p_id = product.p_id')
+    cur.execute("select p_name, p_url, pboop_option, pboop_price, pboop_quick_price, pboop_datetime from price_by_option_of_product join product on price_by_option_of_product.p_id = product.p_id")
     rows = cur.fetchall()
     
     result = {'name':[],'url':[],'option':[],'price':[],'quick_price':[],'datetime':[]}
