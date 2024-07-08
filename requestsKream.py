@@ -131,7 +131,6 @@ try:
         conn.commit()
 
         i += 1
-        break
 
     cur.execute("select p_name, p_url, pboop_option, pboop_price, pboop_quick_price, pboop_datetime from price_by_option_of_product join product on price_by_option_of_product.p_id = product.p_id")
     rows = cur.fetchall()
