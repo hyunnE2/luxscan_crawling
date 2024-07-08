@@ -154,7 +154,7 @@ try:
         wb.save('kream_test_data.xlsx')
 
 
-    with pd.ExcelWriter(excel_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+    with pd.ExcelWriter(excel_path, engine='openpyxl', mode='w', if_sheet_exists='replace') as writer:
         file.write('writing\n')
         pd.DataFrame(result).to_excel(writer, sheet_name='result_sheet', index=False)
 
