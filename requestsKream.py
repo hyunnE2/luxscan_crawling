@@ -29,8 +29,9 @@ password = os.environ.get('DB_PASSWORD')
 db = os.environ.get('DB_TABLE')
 charset = os.environ.get('CHARSET')
 
-excel_path = os.environ.get('EXCEL_PATH')
-excel_path = excel_path +'kream_test_data.xlsx'
+save_path = os.environ.get('SAVE_PATH')
+excel_path = save_path +'kream_test_data.xlsx'
+csv_path = save_path +'kream_test_data.csv'
 
 file = open('crawling(bot_3).log', 'a', encoding='euc-kr')
 file.write(f'start bot3 at : {datetime.now()}\n')
@@ -145,18 +146,27 @@ try:
         result['quick_price'].append(row['pboop_quick_price'])
         result['datetime'].append(row['pboop_datetime'])
     
-    
+    sheet_name = "result_sheet"
     if not os.path.exists(excel_path):
         wb = Workbook()
         ws = wb.active
-        ws.title = "result_sheet"
+        ws.title = sheet_name
 
         wb.save('kream_test_data.xlsx')
 
 
-    with pd.ExcelWriter(excel_path, engine='openpyxl', mode='w', if_sheet_exists='replace') as writer:
+    with pd.ExcelWriter(excel_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+        if sheet_name in writer.book.sheetnames:
+            idx = writer.book.sheetnames.index(sheet_name)
+            std = writer.book.worksheets[idx]
+            writer.book.remove(std)
+
         file.write('writing\n')
-        pd.DataFrame(result).to_excel(writer, sheet_name='result_sheet', index=False)
+        pd.DataFrame(result).to_excel(writer, sheet_name=sheet_name, index=False)
+        
+    df = pd.read_excel(excel_path, sheet_name=sheet_name)
+    df.to_csv(csv_path, index=False)
+        
 
 except Exception:
     err = traceback.format_exc()
