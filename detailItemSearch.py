@@ -44,20 +44,9 @@ browser = webdriver.Chrome(executable_path=exe_chromedriver_path, options=chrome
 browser.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
 browser.execute_cdp_cmd('Network.enable', {})
 
+last_cpl_id = 0
 
 try:
-    conn = pymysql.connect(host=host, user=user, password=password, db=db, charset=charset)
-    cur = conn.cursor(pymysql.cursors.DictCursor)
-
-    cur.execute('SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,\'ONLY_FULL_GROUP_BY\',\'\'))')
-
-    cur.execute('select product.p_id as p_id, cpl_id, p_url from crawling_product_list join product on crawling_product_list.p_id = product.p_id order by cpl_id asc limit 1000')
-    crawling_items = cur.fetchall()
-    # if len(crawling_items) < 1000:
-    #     cur.execute('truncate crawling_product_list')
-    # else:
-    #     cur.execute(f'delete from crawling_product_list where cpl_id >= {crawling_items[0]['cpl_id']} and cpl_id <= {crawling_items[-1]['cpl_id']}')
-
     ## login 
     browser.get(base_url+'/login')
     time.sleep(2)
@@ -70,6 +59,14 @@ try:
     browser.find_element(By.XPATH, '//*[@id="wrap"]/div[3]/div/div/div[3]').click()
 
     time.sleep(2)
+
+    conn = pymysql.connect(host=host, user=user, password=password, db=db, charset=charset)
+    cur = conn.cursor(pymysql.cursors.DictCursor)
+
+    cur.execute('SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,\'ONLY_FULL_GROUP_BY\',\'\'))')
+
+    cur.execute('select product.p_id as p_id, cpl_id, p_url from crawling_product_list join product on crawling_product_list.p_id = product.p_id order by cpl_id asc limit 1000')
+    crawling_items = cur.fetchall()
 
     for crawling_item in crawling_items:
         count = 0
@@ -157,12 +154,12 @@ try:
             sql = sql[0:-2]
             cur.execute(sql)
             conn.commit()
+        
+        last_cpl_id = crawling_item["cpl_id"]
     
     if len(crawling_items) > 0:
-        file.write(f'bot2 : delete {crawling_items[0]["cpl_id"]} ~ {crawling_items[-1]["cpl_id"]}\n')
-        cur.execute(f'delete from crawling_product_list where cpl_id >= {crawling_items[0]["cpl_id"]} and cpl_id <= {crawling_items[-1]["cpl_id"]}')
-        if len(crawling_items) < 999:
-            cur.execute(f'truncate crawling_product_list')    
+        file.write(f'bot2 : delete smaller than {last_cpl_id}\n')
+        cur.execute(f'delete from crawling_product_list where cpl_id <= {last_cpl_id}')
     else:
         file.write(f'bot2 : truncated\n')
         cur.execute(f'truncate crawling_product_list')
@@ -171,6 +168,9 @@ try:
 except Exception:
     err = traceback.format_exc()
     file.write(f'error bot2 : {err}\n')
+    cur.execute(f'delete from crawling_product_list where cpl_id <= {last_cpl_id}')
+
+    conn.commit()
 
 file.write(f'end bot2 at : {datetime.now()}\n\n')
 file.close()
