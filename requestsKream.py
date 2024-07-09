@@ -17,6 +17,9 @@ import os
 
 from fake_useragent import UserAgent
 
+from send_data import send_data 
+
+
 ua = UserAgent()
 ua.browsers.remove('chrome')
 
@@ -166,6 +169,8 @@ try:
         
     df = pd.read_excel(excel_path, sheet_name=sheet_name)
     df.to_csv(csv_path, index=False)
+
+    send_data()
         
 
 except Exception:
