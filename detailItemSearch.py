@@ -175,5 +175,5 @@ except Exception:
 file.write(f'end bot2 at : {datetime.now()}\n\n')
 file.close()
 
-browser.quit()
+browser.close()
 conn.close()

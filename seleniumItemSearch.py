@@ -42,10 +42,10 @@ browser.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5
 browser.execute_cdp_cmd('Network.enable', {})
 
 try:
-    cur.execute('select b_id, b_name from brand')
+    cur.execute('select b_id, b_name from brand where b_name = "Nike"')
     brands = cur.fetchall()
 
-    cur.execute('select c_id, c_name, c_is_men, c_is_woman as c from category')
+    cur.execute('select c_id, c_name, c_is_men, c_is_woman as c from category limit 1')
     categories = cur.fetchall()
 
     for brand in brands:
@@ -65,8 +65,8 @@ try:
                 scrollY = 0
                 while tmp != scrollY:
                     scrollY += 8000
-                    tmp = scrollY = browser.execute_script(f'window.scrollTo(0, {scrollY}); return window.scrollY')
-                    
+                    tmp = browser.execute_script(f'window.scrollTo(0, {scrollY}); return window.scrollY')
+
                     time.sleep(1)
                     scrollY += 8000
                     scrollY = browser.execute_script(f'window.scrollTo(0, {scrollY}); return window.scrollY')
@@ -141,6 +141,6 @@ except Exception:
 file.write(f'end bot1 at : {datetime.now()}\n\n')
 file.close()
 
-browser.quit()
+browser.close()
 conn.close()
 
