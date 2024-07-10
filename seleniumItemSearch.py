@@ -97,14 +97,15 @@ try:
 
                     items[item_name]['url'] = base_url+driver_item.select_one('.item_inner')['href']
                     items[item_name]['img_url'] = driver_item.select_one('.product_img > img')['src']
-                
+                print('browser readed')
+
                 js_items = driver.execute_script("return window.__NUXT__.state['search-tab']['productFeed']['items']")
                 
                 for js_item in js_items:
                     item_name = js_item['product']['release']['name']
                     items[item_name]['sales'] = js_item['product']['market']['total_sales']
                     items[item_name]['option'] = ','.join(js_item['product']['options'])
-
+                print('js readed')
                 
                 for item in items:
                     tmp = items[item]
@@ -128,7 +129,7 @@ try:
 
                     if before_sales != tmp['sales']:
                         cur.execute('insert into crawling_product_list(p_id) values(%s)',(item_id))
-
+                print('inserted data')
 
                 conn.commit()  
             file.write(f'bot1 : {brand} {category} ended : {datetime.now()}\n')
