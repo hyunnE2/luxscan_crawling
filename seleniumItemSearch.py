@@ -24,7 +24,7 @@ file = open('crawling(bot_1).log', 'a', encoding='euc-kr')
 file.write(f'start bot1 at : {datetime.now()}\n')
 
 conn = pymysql.connect(host=host, user=user, password=password, db=db, charset=charset)
-cur = conn.cursor()
+cur = conn.cursor(pymysql.cursors.DictCursor)
 
 ## login 
 chrome_options = webdriver.ChromeOptions()
@@ -44,21 +44,28 @@ driver.execute_cdp_cmd('Network.enable', {})
 try:
     cur.execute('select b_id, b_name from brand where b_name = "Nike"')
     brands = cur.fetchall()
+    
 
-    cur.execute('select c_id, c_name, c_is_men, c_is_woman as c from category limit 1')
+    cur.execute('select c_id, c_name, c_is_men, c_is_woman from category limit 1')
     categories = cur.fetchall()
 
     for brand in brands:
+        cur.execute(f'select * from product where b_id = {brand["b_id"]}')
+        tmp = cur.fetchall()
+        exist_products = {}
+        for exist_product in tmp:
+            exist_products[exist_product['p_url']] = {'p_id': exist_product['p_id'], 'p_count': exist_product['p_count']}
+
         for category in categories:
 
-            for i in range(2):
+            for gender in ('men', 'woman'):
                 items = {}
-
-                if(category[i+2] == 0):
+                
+                if(category['c_is_'+gender] == 0):
                     continue
-                gender = 'men' if i == 0 else 'woman'
-                driver.get(f'https://kream.co.kr/brands/{brand[1]}?tab=44&gender={gender}&shop_category_id={category[0]}&sort=popular_score')
-                file.write(f'bot1 get_url :  https://kream.co.kr/brands/{brand[1]}?tab=44&gender={gender}&shop_category_id={category[0]}&sort=popular_score\n')
+                
+                driver.get(f'https://kream.co.kr/brands/{brand["b_name"]}?tab=44&gender={gender}&shop_category_id={category["c_id"]}&sort=popular_score')
+                file.write(f'bot1 get_url :  https://kream.co.kr/brands/{brand["b_name"]}?tab=44&gender={gender}&shop_category_id={category["c_id"]}&sort=popular_score\n')
                 time.sleep(1)
 
                 last_height = driver.execute_script("return document.body.scrollHeight")
@@ -71,11 +78,13 @@ try:
                     
                     if new_height == last_height:
                         break
+                    print(last_height, new_height)
                     last_height = new_height
-                
+                print(last_height, new_height)
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
 
                 driver_items = soup.select('.search_result_list > .search_result_item')
+
                 print(f'search products : {len(driver_items)}')
                 file.write(f'search products : {len(driver_items)}\n')
                 
@@ -84,7 +93,7 @@ try:
                     items[item_name] = {}
                     items[item_name]['name'] = item_name
                     items[item_name]['market_id'] = 1
-                    items[item_name]['brand_id'] = brand[0]
+                    items[item_name]['brand_id'] = brand["b_id"]
                     items[item_name]['kr_name'] = driver_item.select_one('.product_info_product_name > .translated_name').text
                     items[item_name]['price'] = re.sub(r'[,\s원-]','',driver_item.select_one('.price > .amount').text)
 
@@ -104,25 +113,26 @@ try:
                     items[item_name]['sales'] = js_item['product']['market']['total_sales']
                     items[item_name]['option'] = ','.join(js_item['product']['options'])
 
+
                 for item in items:
                     tmp = items[item]
-                    cur.execute(f'select * from product where p_url = "{tmp["url"]}"')
-                    result = cur.fetchall()
+                    result = exist_products[tmp['url']]
+        
                     before_sales = 0
                     
                     sql = "insert into product (m_id, b_id, p_name, p_name_kr, p_price, p_count, p_option, p_url, p_img_url) values(%s, %s, %s, %s, %s, %s, %s, %s, %s)"
                     # crawling list에 리스트 업하고 product에 데이터를 삽입하는 코드
-                    if len(result) < 1:
+                    if result == None:
                         cur.execute(sql, (tmp['market_id'], tmp['brand_id'], tmp['name'], tmp['kr_name'], tmp['price'], tmp['sales'], tmp['option'], tmp['url'],  tmp['img_url']))
                         cur.execute('select * from product order by p_id desc')
                         item_id = cur.fetchone()[0]
                     # product의 count 값이 바뀌었으면 crawling list에 리스트업 아니면 프로덕트 데이터만 변경해주는 코드
                     else:
-                        item_id = result[0][0]
+                        item_id = result['p_id']
 
                         sql = "update product set p_price = %s, p_count = %s, p_option = %s, p_last_crawling_datetime = %s where p_id = %s"
                         cur.execute(sql, (tmp['price'], tmp['sales'], tmp['option'], datetime.now(), item_id))
-                        before_sales = result[0][6]
+                        before_sales = result['p_count']
 
                     if before_sales != tmp['sales']:
                         cur.execute('insert into crawling_product_list(p_id) values(%s)',(item_id))
@@ -131,7 +141,7 @@ try:
             file.write(f'bot1 : {brand} {category} ended : {datetime.now()}\n')
             file.flush()
 
-        cur.execute(f'update brand set b_update_at = "{datetime.now()}" where b_id = "{brand[0]}"')
+        cur.execute(f'update brand set b_update_at = "{datetime.now()}" where b_id = "{brand["b_id"]}"')
         conn.commit()
 
 except Exception:
