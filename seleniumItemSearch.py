@@ -37,9 +37,9 @@ chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64
 
 exe_chromedriver_path = os.environ.get('EXECUTABLE_CHROMEDRIVER_PATH')
 
-browser = webdriver.Chrome(executable_path=exe_chromedriver_path, options=chrome_options)
-browser.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
-browser.execute_cdp_cmd('Network.enable', {})
+driver = webdriver.Chrome(executable_path=exe_chromedriver_path, options=chrome_options)
+driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
+driver.execute_cdp_cmd('Network.enable', {})
 
 try:
     cur.execute('select b_id, b_name from brand where b_name = "Nike"')
@@ -57,45 +57,48 @@ try:
                 if(category[i+2] == 0):
                     continue
                 gender = 'men' if i == 0 else 'woman'
-                browser.get(f'https://kream.co.kr/brands/{brand[1]}?tab=44&gender={gender}&shop_category_id={category[0]}&sort=popular_score')
+                driver.get(f'https://kream.co.kr/brands/{brand[1]}?tab=44&gender={gender}&shop_category_id={category[0]}&sort=popular_score')
                 file.write(f'bot1 get_url :  https://kream.co.kr/brands/{brand[1]}?tab=44&gender={gender}&shop_category_id={category[0]}&sort=popular_score\n')
                 time.sleep(1)
 
-                tmp = -1
-                scrollY = 0
-                while tmp != scrollY:
-                    print(tmp, scrollY, tmp != scrollY)
-                    scrollY += 8000
-                    tmp = browser.execute_script(f'window.scrollTo(0, {scrollY}); return window.scrollY')
-
-                    time.sleep(1.2)
-                    scrollY += 8000
-                    scrollY = browser.execute_script(f'window.scrollTo(0, {scrollY}); return window.scrollY')
-                time.sleep(2)
+                print('enter while')
+                last_height = driver.execute_script("return document.body.scrollHeight")
+                while True:
+                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                    
+                    time.sleep(1)
+                    
+                    new_height = driver.execute_script("return document.body.scrollHeight")
+                    
+                    if new_height == last_height:
+                        break
+                    print(last_height, new_height)
+                    last_height = new_height
+                print('quit while')
                 
-                soup = BeautifulSoup(browser.page_source, 'html.parser')
+                soup = BeautifulSoup(driver.page_source, 'html.parser')
 
-                browser_items = soup.select('.search_result_list > .search_result_item')
+                driver_items = soup.select('.search_result_list > .search_result_item')
 
-                for browser_item in browser_items:
-                    item_name = browser_item.select_one('.product_info_product_name > .name').text
+                for driver_item in driver_items:
+                    item_name = driver_item.select_one('.product_info_product_name > .name').text
                     items[item_name] = {}
                     items[item_name]['name'] = item_name
                     items[item_name]['market_id'] = 1
                     items[item_name]['brand_id'] = brand[0]
-                    items[item_name]['kr_name'] = browser_item.select_one('.product_info_product_name > .translated_name').text
-                    items[item_name]['price'] = re.sub(r'[,\s원-]','',browser_item.select_one('.price > .amount').text)
+                    items[item_name]['kr_name'] = driver_item.select_one('.product_info_product_name > .translated_name').text
+                    items[item_name]['price'] = re.sub(r'[,\s원-]','',driver_item.select_one('.price > .amount').text)
 
-                    discount_rate = browser_item.select_one('.price > .amount > .discount_rate')
+                    discount_rate = driver_item.select_one('.price > .amount > .discount_rate')
                     if discount_rate != None:
                         items[item_name]['price'] = items[item_name]['price'].replace(discount_rate.text, '')
 
                     items[item_name]['price'] = int(items[item_name]['price']) if items[item_name]['price'] != "" else 0
 
-                    items[item_name]['url'] = base_url+browser_item.select_one('.item_inner')['href']
-                    items[item_name]['img_url'] = browser_item.select_one('.product_img > img')['src']
+                    items[item_name]['url'] = base_url+driver_item.select_one('.item_inner')['href']
+                    items[item_name]['img_url'] = driver_item.select_one('.product_img > img')['src']
                 
-                js_items = browser.execute_script("return window.__NUXT__.state['search-tab']['productFeed']['items']")
+                js_items = driver.execute_script("return window.__NUXT__.state['search-tab']['productFeed']['items']")
                 
                 for js_item in js_items:
                     item_name = js_item['product']['release']['name']
@@ -142,6 +145,6 @@ except Exception:
 file.write(f'end bot1 at : {datetime.now()}\n\n')
 file.close()
 
-browser.close()
+driver.close()
 conn.close()
 
