@@ -64,10 +64,11 @@ try:
                 tmp = -1
                 scrollY = 0
                 while tmp != scrollY:
+                    print(tmp, scrollY, tmp != scrollY)
                     scrollY += 8000
                     tmp = browser.execute_script(f'window.scrollTo(0, {scrollY}); return window.scrollY')
 
-                    time.sleep(1)
+                    time.sleep(1.2)
                     scrollY += 8000
                     scrollY = browser.execute_script(f'window.scrollTo(0, {scrollY}); return window.scrollY')
                 time.sleep(2)
