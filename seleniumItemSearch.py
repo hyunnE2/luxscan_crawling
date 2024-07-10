@@ -66,7 +66,7 @@ try:
                 while True:
                     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                     
-                    time.sleep(2)
+                    time.sleep(1)
                     
                     new_height = driver.execute_script("return document.body.scrollHeight")
                     
@@ -147,6 +147,5 @@ file.write(f'end bot1 at : {datetime.now()}\n\n')
 file.close()
 
 driver.quit()
-driver.close()
 conn.close()
 

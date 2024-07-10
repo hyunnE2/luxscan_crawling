@@ -11,7 +11,7 @@ csv_file_name = 'kream_test_data.csv'
 load_dotenv()
 
 save_path = os.environ.get('SAVE_PATH')
-key_file_path = save_path + 'luxscan-crawling.ppk'
+key_file_path = save_path + 'luxscan_crawling.pem'
 
 
 file = open('crawling_sftp.log', 'a', encoding='euc-kr')
@@ -56,3 +56,4 @@ def send_data():
 
     ssh.close()
     file.close()
+send_data()

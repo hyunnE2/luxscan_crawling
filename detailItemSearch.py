@@ -176,5 +176,4 @@ file.write(f'end bot2 at : {datetime.now()}\n\n')
 file.close()
 
 driver.quit()
-driver.close()
 conn.close()
