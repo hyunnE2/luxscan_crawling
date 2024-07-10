@@ -61,7 +61,6 @@ try:
                 file.write(f'bot1 get_url :  https://kream.co.kr/brands/{brand[1]}?tab=44&gender={gender}&shop_category_id={category[0]}&sort=popular_score\n')
                 time.sleep(1)
 
-                print('enter while')
                 last_height = driver.execute_script("return document.body.scrollHeight")
                 while True:
                     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -72,14 +71,13 @@ try:
                     
                     if new_height == last_height:
                         break
-                    print(last_height, new_height)
                     last_height = new_height
-                print('quit while')
                 
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
 
                 driver_items = soup.select('.search_result_list > .search_result_item')
-                print(len(driver_items))
+                print(f'search products : {len(driver_items)}')
+                file.write(f'search products : {len(driver_items)}\n')
                 
                 for driver_item in driver_items:
                     item_name = driver_item.select_one('.product_info_product_name > .name').text
@@ -105,8 +103,6 @@ try:
                     item_name = js_item['product']['release']['name']
                     items[item_name]['sales'] = js_item['product']['market']['total_sales']
                     items[item_name]['option'] = ','.join(js_item['product']['options'])
-
-                break
 
                 for item in items:
                     tmp = items[item]
