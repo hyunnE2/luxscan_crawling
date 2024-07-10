@@ -66,7 +66,7 @@ try:
                 while True:
                     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                     
-                    time.sleep(1)
+                    time.sleep(2)
                     
                     new_height = driver.execute_script("return document.body.scrollHeight")
                     
@@ -79,7 +79,8 @@ try:
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
 
                 driver_items = soup.select('.search_result_list > .search_result_item')
-
+                print(len(driver_items))
+                
                 for driver_item in driver_items:
                     item_name = driver_item.select_one('.product_info_product_name > .name').text
                     items[item_name] = {}
@@ -97,7 +98,6 @@ try:
 
                     items[item_name]['url'] = base_url+driver_item.select_one('.item_inner')['href']
                     items[item_name]['img_url'] = driver_item.select_one('.product_img > img')['src']
-                print('browser readed')
 
                 js_items = driver.execute_script("return window.__NUXT__.state['search-tab']['productFeed']['items']")
                 
@@ -105,8 +105,9 @@ try:
                     item_name = js_item['product']['release']['name']
                     items[item_name]['sales'] = js_item['product']['market']['total_sales']
                     items[item_name]['option'] = ','.join(js_item['product']['options'])
-                print('js readed')
-                
+
+                break
+
                 for item in items:
                     tmp = items[item]
                     cur.execute(f'select * from product where p_url = "{tmp["url"]}"')
@@ -129,7 +130,6 @@ try:
 
                     if before_sales != tmp['sales']:
                         cur.execute('insert into crawling_product_list(p_id) values(%s)',(item_id))
-                print('inserted data')
 
                 conn.commit()  
             file.write(f'bot1 : {brand} {category} ended : {datetime.now()}\n')
@@ -146,6 +146,7 @@ except Exception:
 file.write(f'end bot1 at : {datetime.now()}\n\n')
 file.close()
 
+driver.quit()
 driver.close()
 conn.close()
 

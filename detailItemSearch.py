@@ -40,23 +40,23 @@ chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64
 
 exe_chromedriver_path = os.environ.get('EXECUTABLE_CHROMEDRIVER_PATH')
 
-browser = webdriver.Chrome(executable_path=exe_chromedriver_path, options=chrome_options)
-browser.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
-browser.execute_cdp_cmd('Network.enable', {})
+driver = webdriver.Chrome(executable_path=exe_chromedriver_path, options=chrome_options)
+driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
+driver.execute_cdp_cmd('Network.enable', {})
 
 last_cpl_id = 0
 
 try:
     ## login 
-    browser.get(base_url+'/login')
+    driver.get(base_url+'/login')
     time.sleep(2)
-    id = browser.find_element(By.XPATH, '//*[@id="wrap"]/div[3]/div/div/div[1]/div/input')
+    id = driver.find_element(By.XPATH, '//*[@id="wrap"]/div[3]/div/div/div[1]/div/input')
     id.send_keys(crawling_id)
 
-    pw = browser.find_element(By.XPATH, '//*[@id="wrap"]/div[3]/div/div/div[2]/div/input')
+    pw = driver.find_element(By.XPATH, '//*[@id="wrap"]/div[3]/div/div/div[2]/div/input')
     pw.send_keys(crawling_pw)
 
-    browser.find_element(By.XPATH, '//*[@id="wrap"]/div[3]/div/div/div[3]').click()
+    driver.find_element(By.XPATH, '//*[@id="wrap"]/div[3]/div/div/div[3]').click()
 
     time.sleep(2)
 
@@ -75,9 +75,9 @@ try:
 
         file.write(f'bot2 crawling url : {crawling_item["p_url"]}\n')
 
-        browser.get(crawling_item['p_url'])
+        driver.get(crawling_item['p_url'])
         time.sleep(2)
-        browser.find_element(By.CSS_SELECTOR, '.tab_content > .outlinegrey').click()        
+        driver.find_element(By.CSS_SELECTOR, '.tab_content > .outlinegrey').click()        
 
         cur.execute(f'select count(*) as count, date(psh_datetime) as psh_datetime from product_sell_history where p_id = {crawling_item["p_id"]} group by psh_datetime order by psh_datetime desc')
         last_data = cur.fetchone()
@@ -89,7 +89,7 @@ try:
             last_data['psh_datetime'] = datetime.strptime(str(last_data['psh_datetime']), '%Y-%m-%d')
             count = int(last_data['count'])
         
-        scrollItem = browser.find_element(By.CSS_SELECTOR, '.market_price_table > .price_body')
+        scrollItem = driver.find_element(By.CSS_SELECTOR, '.market_price_table > .price_body')
         
         tmp = -1
         scrollY = 0
@@ -97,14 +97,14 @@ try:
             isbreak = False
 
             scrollY += 8000
-            tmp = browser.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
+            tmp = driver.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
             
             time.sleep(0.6)
 
             scrollY += 8000
-            scrollY = browser.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
+            scrollY = driver.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
 
-            soup = BeautifulSoup(browser.page_source, 'html.parser')
+            soup = BeautifulSoup(driver.page_source, 'html.parser')
             browser_items = soup.select('.price_body > .body_list > .list_txt:nth-child(3) > span')
 
             for i in browser_items:
@@ -175,5 +175,6 @@ except Exception:
 file.write(f'end bot2 at : {datetime.now()}\n\n')
 file.close()
 
-browser.close()
+driver.quit()
+driver.close()
 conn.close()

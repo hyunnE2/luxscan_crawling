@@ -179,5 +179,6 @@ except Exception:
 
 file.write(f'ended bot3 at : {datetime.now()}\n')
 
+session.close()
 conn.close()
 file.close()
