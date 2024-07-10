@@ -116,8 +116,10 @@ try:
 
                 for item in items:
                     tmp = items[item]
-                    result = exist_products[tmp['url']]
-        
+                    try:
+                        result = exist_products[tmp['url']]
+                    except Exception:
+                        result = None
                     before_sales = 0
                     
                     sql = "insert into product (m_id, b_id, p_name, p_name_kr, p_price, p_count, p_option, p_url, p_img_url) values(%s, %s, %s, %s, %s, %s, %s, %s, %s)"

@@ -56,4 +56,3 @@ def send_data():
 
     ssh.close()
     file.close()
-send_data()
