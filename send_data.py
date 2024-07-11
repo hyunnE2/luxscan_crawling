@@ -13,11 +13,10 @@ load_dotenv()
 save_path = os.environ.get('SAVE_PATH')
 key_file_path = save_path + 'luxscan_crawling.pem'
 
-
-file = open('crawling_sftp.log', 'a', encoding='euc-kr')
-file.write(f'start sftp at : {datetime.now()}\n')
-
 def send_data():
+    file = open('crawling_sftp.log', 'a', encoding='euc-kr')
+    file.write(f'start sftp at : {datetime.now()}\n')
+
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy)
     try:
@@ -52,7 +51,6 @@ def send_data():
         print(err)
         file.write(f'sftp error : {err}\n')
 
-    file.write(f'end sftp at : {datetime.now()}\n')
-
+    file.write(f'end sftp at : {datetime.now()}\n')    
     ssh.close()
     file.close()
