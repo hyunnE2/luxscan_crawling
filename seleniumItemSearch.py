@@ -127,7 +127,7 @@ try:
                     if result == None:
                         cur.execute(sql, (tmp['market_id'], tmp['brand_id'], tmp['name'], tmp['kr_name'], tmp['price'], tmp['sales'], tmp['option'], tmp['url'],  tmp['img_url']))
                         cur.execute('select * from product order by p_id desc')
-                        item_id = cur.fetchone()[0]
+                        item_id = cur.fetchone()['p_id']
                     # product의 count 값이 바뀌었으면 crawling list에 리스트업 아니면 프로덕트 데이터만 변경해주는 코드
                     else:
                         item_id = result['p_id']
