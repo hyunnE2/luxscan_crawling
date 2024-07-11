@@ -1,184 +1,188 @@
 import time
 import requests
 import json
-from openpyxl import Workbook, load_workbook
-
-import pymysql
-import pymysql.cursors
-import traceback
-
+from openpyxl import Workbook
 import pandas as pd
-
+import pymysql
+import traceback
 from datetime import datetime
 from py_mini_racer import py_mini_racer
-
 from dotenv import load_dotenv
 import os
-
 from fake_useragent import UserAgent
-
 from send_data import send_data 
 
-
-ua = UserAgent()
-ua.browsers.remove('chrome')
-
+# Load environment variables
 load_dotenv()
 
-base_url = os.environ.get('BASE_URL')
-host = os.environ.get('HOST')
-user = os.environ.get('DB_USER')
-password = os.environ.get('DB_PASSWORD')
-db = os.environ.get('DB_TABLE')
-charset = os.environ.get('CHARSET')
+# Setup constants and configurations
+BASE_URL = os.environ.get('BASE_URL')
+DB_CONFIG = {
+    'host': os.environ.get('HOST'),
+    'user': os.environ.get('DB_USER'),
+    'password': os.environ.get('DB_PASSWORD'),
+    'db': os.environ.get('DB_TABLE'),
+    'charset': os.environ.get('CHARSET')
+}
+SAVE_PATH = os.environ.get('SAVE_PATH')
+EXCEL_PATH = os.path.join(SAVE_PATH, 'kream_test_data.xlsx')
+CSV_PATH = os.path.join(SAVE_PATH, 'kream_test_data.csv')
+LOG_FILE = 'crawling(bot_3).log'
 
-save_path = os.environ.get('SAVE_PATH')
-excel_path = save_path +'kream_test_data.xlsx'
-csv_path = save_path +'kream_test_data.csv'
+# Initialize log file
+def init_log(file_path):
+    with open(file_path, 'a', encoding='euc-kr') as f:
+        f.write(f'start bot3 at : {datetime.now()}\n')
 
-file = open('crawling(bot_3).log', 'a', encoding='euc-kr')
-file.write(f'start bot3 at : {datetime.now()}\n')
+# Write log
+def write_log(file_path, message):
+    with open(file_path, 'a', encoding='euc-kr') as f:
+        f.write(message + '\n')
 
-session = requests.Session()
+# Fetch the last crawled product ID
+def get_last_crawled_p_id(cur):
+    cur.execute("SELECT * FROM config WHERE cfg_key = 'crawled_p_id'")
+    result = cur.fetchone()
+    if result is None:
+        cur.execute("INSERT INTO config(cfg_key, cfg_value) VALUES('crawled_p_id', 0)")
+        return 0
+    return int(result['cfg_value'])
 
-try:
-    conn = pymysql.connect(host=host, user=user, password=password, db=db, charset=charset)
-    cur = conn.cursor(pymysql.cursors.DictCursor)
+# Fetch products to crawl
+def fetch_products(cur, last_crawled_p_id, p_count=80, limit=500):
+    cur.execute(f"SELECT * FROM product WHERE p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
+    return cur.fetchall()
 
-    cur.execute("select * from config where cfg_key = 'crawled_p_id'")
-    crawled_p_id = cur.fetchone()
+# Update the last crawled product ID
+def update_last_crawled_p_id(cur, p_id):
+    cur.execute(f"UPDATE config SET cfg_value = {p_id} WHERE cfg_key = 'crawled_p_id'")
 
-    if crawled_p_id == None:
-        cur.execute("insert into config(cfg_key, cfg_value) values('crawled_p_id', 0)")
-        crawled_p_id = 0
-    else:
-        crawled_p_id = crawled_p_id['cfg_value']
+# Extract script content from HTML
+def extract_script_content(html_content):
+    script_start = html_content.find("window.__NUXT__=")
+    script_end = html_content.find("</script>", script_start)
+    if script_start == -1 or script_end == -1:
+        return None
+    return html_content[script_start:script_end]
 
-    cur.execute(f"select * from product where p_id > {crawled_p_id} limit 500")
-    products = cur.fetchall()
+# Parse nuxt data using py_mini_racer
+def parse_nuxt_data(script_content):
+    ctx = py_mini_racer.MiniRacer()
+    ctx.eval("window={};")
+    ctx.eval(script_content)
+    try:
+        return ctx.eval("JSON.stringify(window.__NUXT__.state.product.response.sales_options)")
+    except:
+        return ctx.eval("JSON.stringify(window.__NUXT__.state.product.response.sale_info.details.options)")
 
-    file.write(f"bot3 : loaded products {len(products)}\n")
+# Insert or update product prices
+def upsert_product_prices(cur, product_id, items):
+    for item in items:
+        if 'is_show_option_price' in item and not item['is_show_option_price']:
+            continue
 
-    i = 0
-    for product in products:
-        if i % 400 == 0:
-            headers = {
-                'user-agent' : ua.random,
-            }
-            print('change user-agent')
-            
-            response = session.get(product['p_url'], headers=headers)
-            for j in range(0, 5):
-                headers = {
-                    'user-agent' : ua.random,
-                }
-                response = session.get(product['p_url'], headers=headers)
+        price = item.get('price', item.get('lowest_normal', 0))
+        fast_price = item.get('lowest_100', 0)
+        option = item.get('key', item.get('option', ''))
 
-                if response.status_code == 200:
-                    break
-        else:
-            response = session.get(product['p_url'], headers=headers)
+        cur.execute(
+            f"""
+            INSERT INTO price_by_option_of_product(p_id, pboop_option, pboop_price, pboop_quick_price) 
+            VALUES (%s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE 
+                pboop_price = VALUES(pboop_price), 
+                pboop_quick_price = VALUES(pboop_quick_price), 
+                pboop_datetime = %s
+            """,
+            (product_id, option, price, fast_price, datetime.now())
+        )
 
-        html_content = response.text
-        
-        if response.status_code == 200:
-            script_start = html_content.find("window.__NUXT__=")
-            script_end = html_content.find("</script>", script_start)
-            if script_start == -1 or script_end == -1:
-                file.write("script not found\n")
-            else:
-                script_content = html_content[script_start:script_end]
-                
-                ctx = py_mini_racer.MiniRacer()
-
-                ctx.eval("window={};")
-
-                ctx.eval(script_content)
-
-                nuxt_data = ctx.eval("JSON.stringify(window.__NUXT__.state.product.response.sales_options)")
-                if nuxt_data == None:
-                    nuxt_data = ctx.eval("JSON.stringify(window.__NUXT__.state.product.response.sale_info.details.options)")
-
-                    for item in json.loads(nuxt_data):
-                        if item['is_show_option_price'] == False: continue
-
-                        if item['price'] != None:
-                            price = item['price']
-                        else:
-                            price = 0
-                        fast_price = 0
-                        cur.execute(f"insert into price_by_option_of_product(`p_id`, `pboop_option`, `pboop_price`, `pboop_quick_price`) values ({product['p_id']},'{item['key']}',{price},{fast_price}) on DUPLICATE KEY UPDATE `pboop_price` = {price}, `pboop_quick_price` = {fast_price}, `pboop_datetime` = '{datetime.now()}'")          
-                else:    
-                    for item in json.loads(nuxt_data):
-                        if item['lowest_normal'] != None:
-                            price = item['lowest_normal']
-                        else:
-                            price = 0
-
-                        if item['lowest_100'] != None:
-                            fast_price = item['lowest_100']
-                        else:
-                            fast_price = 0
-                        cur.execute(f"insert into price_by_option_of_product(`p_id`, `pboop_option`, `pboop_price`, `pboop_quick_price`) values ({product['p_id']},'{item['option']}',{price},{fast_price}) on DUPLICATE KEY UPDATE `pboop_price` = {price}, `pboop_quick_price` = {fast_price}, `pboop_datetime` = '{datetime.now()}'")          
-            print(f"success. p_id : {product['p_id']}")
-            file.write(f"sucess. p_id : {product['p_id']}\n")     
-        else:
-            print(f"Failed to retrieve the web page status={response.status_code}. p_id : {product['p_id']}\n")
-            file.write(f"Failed to retrieve the web page status={response.status_code}. p_id : {product['p_id']}\n")
-            cur.execute(f"update config set cfg_value = {product['p_id']-1} where cfg_key = 'crawled_p_id'")
-            break
-        cur.execute(f"update config set cfg_value = {product['p_id']} where cfg_key = 'crawled_p_id'")
-
-        file.write(f"p_id : {product['p_id']} end at :{datetime.now()}\n")
-        file.flush()
-
-        conn.commit()
-
-        i += 1
-
-    cur.execute("select p_name, p_url, pboop_option, pboop_price, pboop_quick_price, pboop_datetime from price_by_option_of_product join product on price_by_option_of_product.p_id = product.p_id")
-    rows = cur.fetchall()
+# Process each product
+def process_product(session, product, cur, ua, headers):
+    response = session.get(product['p_url'], headers=headers)
+    if response.status_code != 200:
+        return False, product['p_id']
     
-    result = {'name':[],'url':[],'option':[],'price':[],'quick_price':[],'datetime':[]}
-
-    for row in rows:
-        result['name'].append(row['p_name'])
-        result['url'].append(row['p_url'])
-        result['option'].append(row['pboop_option'])
-        result['price'].append(row['pboop_price'])
-        result['quick_price'].append(row['pboop_quick_price'])
-        result['datetime'].append(row['pboop_datetime'])
+    script_content = extract_script_content(response.text)
+    if script_content is None:
+        write_log(LOG_FILE, "script not found")
+        return False, product['p_id']
     
-    sheet_name = "result_sheet"
-    if not os.path.exists(excel_path):
-        wb = Workbook()
-        ws = wb.active
-        ws.title = sheet_name
+    nuxt_data = parse_nuxt_data(script_content)
+    if nuxt_data is None:
+        write_log(LOG_FILE, "failed to parse nuxt data")
+        return False, product['p_id']
+    
+    upsert_product_prices(cur, product['p_id'], json.loads(nuxt_data))
+    write_log(LOG_FILE, f"success. p_id : {product['p_id']}")
+    return True, product['p_id']
 
-        wb.save('kream_test_data.xlsx')
+# Main function to perform crawling
+def main():
+    ua = UserAgent()
+    ua.browsers.remove('chrome')
 
+    init_log(LOG_FILE)
+    session = requests.Session()
 
-    with pd.ExcelWriter(excel_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-        if sheet_name in writer.book.sheetnames:
-            idx = writer.book.sheetnames.index(sheet_name)
-            std = writer.book.worksheets[idx]
-            writer.book.remove(std)
+    try:
+        conn = pymysql.connect(**DB_CONFIG)
+        cur = conn.cursor(pymysql.cursors.DictCursor)
 
-        file.write('writing\n')
-        pd.DataFrame(result).to_excel(writer, sheet_name=sheet_name, index=False)
+        last_crawled_p_id = get_last_crawled_p_id(cur)
+        products = fetch_products(cur, last_crawled_p_id)
+        write_log(LOG_FILE, f"bot3 : loaded products {len(products)}")
+
+        headers = {'user-agent': ua.random}
+        for i, product in enumerate(products):
+            if i % 400 == 0:
+                headers = {'user-agent': ua.random}
+                print('change user-agent')
+
+            success, p_id = process_product(session, product, cur, ua, headers)
+            if not success:
+                update_last_crawled_p_id(cur, p_id - 1)
+                break
+
+            update_last_crawled_p_id(cur, p_id)
+            write_log(LOG_FILE, f"p_id : {p_id} end at :{datetime.now()}")
+            conn.commit()
+
+        # Write results to Excel and CSV
+        cur.execute(
+            "SELECT p_name, p_url, pboop_option, pboop_price, pboop_quick_price, pboop_datetime "
+            "FROM price_by_option_of_product "
+            "JOIN product ON price_by_option_of_product.p_id = product.p_id"
+        )
+        rows = cur.fetchall()
+        result = pd.DataFrame(rows)
         
-    df = pd.read_excel(excel_path, sheet_name=sheet_name)
-    df.to_csv(csv_path, index=False)
+        if not os.path.exists(EXCEL_PATH):
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "result_sheet"
+            wb.save(EXCEL_PATH)
 
-    send_data()
-        
+        with pd.ExcelWriter(EXCEL_PATH, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+            if "result_sheet" in writer.book.sheetnames:
+                idx = writer.book.sheetnames.index("result_sheet")
+                std = writer.book.worksheets[idx]
+                writer.book.remove(std)
 
-except Exception:
-    err = traceback.format_exc()
-    file.write(f'error bot3 : {err}\n')
+            result.to_excel(writer, sheet_name='result_sheet', index=False)
 
-file.write(f'ended bot3 at : {datetime.now()}\n')
+        result.to_csv(CSV_PATH, index=False)
 
-session.close()
-conn.close()
-file.close()
+        send_data()
+
+    except Exception:
+        err = traceback.format_exc()
+        write_log(LOG_FILE, f'error bot3 : {err}')
+
+    finally:
+        write_log(LOG_FILE, f'ended bot3 at : {datetime.now()}')
+        session.close()
+        conn.close()
+
+if __name__ == "__main__":
+    main()
