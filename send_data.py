@@ -1,23 +1,20 @@
+import os
 import paramiko
-
-from datetime import datetime
-
 import pymysql
 import traceback
-
 from openpyxl import Workbook
 import pandas as pd
-
-import os
+from datetime import datetime
 from dotenv import load_dotenv
+import re
 
-upload_path = '/home/luxscan/luxscan/public/xlsx/'
-
+# Load environment variables
 load_dotenv()
 
-save_path = os.environ.get('SAVE_PATH')
-key_file_path = save_path + 'luxscan_crawling.pem'
-
+# Define constants
+SAVE_PATH = os.environ.get('SAVE_PATH')
+KEY_FILE_PATH = os.path.join(SAVE_PATH, 'luxscan_crawling.pem')
+UPLOAD_PATH = '/home/luxscan/luxscan/public/xlsx/'
 
 DB_CONFIG = {
     'host': os.environ.get('HOST'),
@@ -27,87 +24,134 @@ DB_CONFIG = {
     'charset': os.environ.get('CHARSET')
 }
 
+TABLE_LIST = [
+    'brand', 'category', 'config', 'crawling_product_list', 'market', 
+    'price_by_option_of_product', 'product', 'product_sell_history'
+]
 
-table_list = ['brand', 'category', 'config', 'crawling_product_list', 'market', 'price_by_option_of_product', 'product', 'product_sell_history']
-
-def send_data():
-    file = open('crawling_sftp.log', 'a', encoding='euc-kr')
-    file.write(f'start sftp at : {datetime.now()}\n')
-
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy)
-    try:
-        ssh.connect("43.200.251.231", username="luxscan", key_filename=key_file_path)
-        print('ssh connected.')
-        file.write("ssh connected")
+LOG_FILE = 'send_data.log'
 
 
-        sftp = ssh.open_sftp()
-        sftp.put(str(save_path), str(upload_path))
-
-        print('sftp upload success.')
-        file.write("sftp upload success.")
-
-        command = 'cd /home/luxscan/luxscan && npm run build'
-
-        # 명령어 실행
-        stdin, stdout, stderr = ssh.exec_command(command)
-
-        # 빌드 명령어가 완료될 때까지 기다림
-        exit_status = stdout.channel.recv_exit_status()
-        if exit_status == 0:
-            print("Build completed successfully")
-            file.write("Build completed successfully")
-            
-        else:
-            print(f"Build failed with exit status {exit_status}")
-            file.write(f"Build failed with exit status {exit_status}")
-        
-
-    except Exception as err:
-        print(err)
-        file.write(f'sftp error : {err}\n')
-
-    file.write(f'end sftp at : {datetime.now()}\n')    
-    ssh.close()
-    file.close()
+def log_message(message):
+    """Logs a message to the log file with a timestamp."""
+    with open(LOG_FILE, 'a', encoding='euc-kr') as file:
+        file.write(f"{datetime.now()}: {message}\n")
 
 
-if __name__ =="__main__":
+def connect_db():
+    """Establishes and returns a connection to the database."""
     try:
         conn = pymysql.connect(**DB_CONFIG)
+        return conn
+    except Exception as e:
+        log_message(f"Database connection error: {e}")
+        raise
+
+
+def fetch_table_data(cur, table):
+    """Fetches all rows from the specified table."""
+    cur.execute(f"SELECT * FROM {table}")
+    return cur.fetchall()
+
+
+def clean_data(data):
+    """Cleans the data by removing illegal characters."""
+    if isinstance(data, str):
+        # Remove illegal characters
+        return re.sub(r'[\000-\010]|[\013-\014]|[\016-\037]', '', data)
+    return data
+
+
+def clean_dataframe(df):
+    """Applies the clean_data function to all elements in the dataframe."""
+    return df.applymap(clean_data)
+
+
+def save_to_excel_and_csv(rows, table):
+    """Saves rows to an Excel file and a CSV file, chunked by 10000 rows per sheet."""
+    results = [pd.DataFrame(rows[i*10000:(i+1)*10000]) for i in range((len(rows) // 10000) + 1)]
+    
+    excel_path = os.path.join(SAVE_PATH, f"{table}.xlsx")
+    csv_path = os.path.join(SAVE_PATH, f"{table}.csv")
+
+    if os.path.exists(excel_path):
+        os.remove(excel_path)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "result_sheet"
+    wb.save(excel_path)
+
+    for idx, result in enumerate(results):
+        sheet_name = f"result_sheet_{idx+1}" if len(results) > 1 else "result_sheet"
+        result = clean_dataframe(result)
+        with pd.ExcelWriter(excel_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+            result.to_excel(writer, sheet_name=sheet_name, index=False)
+
+    if results:
+        cleaned_results = [clean_dataframe(result) for result in results]
+        pd.concat(cleaned_results).to_csv(csv_path, index=False)
+
+
+def send_files_via_sftp():
+    """Uploads the files to the remote server via SFTP."""
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect("43.200.251.231", username="luxscan", key_filename=KEY_FILE_PATH)
+        log_message("SSH connected")
+
+        sftp = ssh.open_sftp()
+        for table in TABLE_LIST:
+            local_path = os.path.join(SAVE_PATH, f"{table}.xlsx")
+            remote_path = os.path.join(UPLOAD_PATH, f"{table}.xlsx")
+
+            if os.path.exists(local_path):
+                sftp.put(local_path, remote_path)
+                log_message(f"Uploaded {table} successfully.")
+            else:
+                log_message(f"File for table {table} not found.")
+
+        log_message("SFTP upload completed")
+
+        command = 'cd /home/luxscan/luxscan && npm run build'
+        stdin, stdout, stderr = ssh.exec_command(command)
+        exit_status = stdout.channel.recv_exit_status()
+        if exit_status == 0:
+            log_message("Build completed successfully")
+        else:
+            log_message(f"Build failed with exit status {exit_status}")
+        
+        ssh.close()
+
+    except Exception as e:
+        log_message(f"SFTP error: {e}")
+
+
+def main():
+    """Main function to run the data fetching, saving, and sending process."""
+    try:
+        log_message("Start bot")
+
+        conn = connect_db()
         cur = conn.cursor(pymysql.cursors.DictCursor)
 
-        for table in table_list:
-            # Write results to Excel and CSV
-            cur.execute(
-                "SELECT * FROM "+table
-            )
-            rows = cur.fetchall()
-            result = pd.DataFrame(rows)
+        for table in TABLE_LIST:
+            rows = fetch_table_data(cur, table)
+            save_to_excel_and_csv(rows, table)
 
-            excel_path = save_path + table+'.xlsx'
-            csv_path = save_path + table+'.csv'
+        send_files_via_sftp()
 
-            if not os.path.exists(excel_path):
-                wb = Workbook()
-                ws = wb.active
-                ws.title = "result_sheet"
-                wb.save(excel_path)
+        for table in TABLE_LIST:
+            os.remove(os.path.join(SAVE_PATH, f"{table}.xlsx"))
+            os.remove(os.path.join(SAVE_PATH, f"{table}.csv"))
 
-            with pd.ExcelWriter(excel_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-                if "result_sheet" in writer.book.sheetnames:
-                    idx = writer.book.sheetnames.index("result_sheet")
-                    std = writer.book.worksheets[idx]
-                    writer.book.remove(std)
-
-                result.to_excel(writer, sheet_name='result_sheet', index=False)
-
-            result.to_csv(csv_path, index=False)
-
-            send_data()
-    except Exception:
-        err = traceback.format_exc()
-
+    except Exception as e:
+        log_message(f"Error: {traceback.format_exc()}")
     finally:
+        log_message("End bot")
         conn.close()
+
+
+if __name__ == "__main__":
+    main()
