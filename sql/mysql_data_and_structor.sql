@@ -4,7 +4,7 @@ USE luxscan_crawling_data;
 DROP TABLE IF EXISTS `brand`;
 CREATE TABLE `brand` (
   `b_id` int NOT NULL AUTO_INCREMENT,
-  `b_name` varchar(50) DEFAULT NULL,
+  `b_name` varchar(255) DEFAULT NULL,
   `b_update_at` datetime DEFAULT NULL,
   PRIMARY KEY (`b_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -15,7 +15,7 @@ INSERT INTO `brand`(`b_id`, `b_name`) VALUES (1,'Bottega Veneta'),(2,'Adidas'),(
 DROP TABLE IF EXISTS `category`;
 CREATE TABLE `category` (
   `c_id` int NOT NULL AUTO_INCREMENT,
-  `c_name` varchar(50) DEFAULT NULL,
+  `c_name` varchar(255) DEFAULT NULL,
   `c_is_men` tinyint DEFAULT '0',
   `c_is_woman` tinyint DEFAULT '0',
   PRIMARY KEY (`c_id`)
@@ -43,7 +43,7 @@ CREATE TABLE `crawling_product_list` (
 DROP TABLE IF EXISTS `market`;
 CREATE TABLE `market` (
   `m_id` int NOT NULL AUTO_INCREMENT,
-  `m_name` varchar(100) DEFAULT NULL,
+  `m_name` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`m_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -61,8 +61,8 @@ CREATE TABLE `product` (
   `p_origin_price` decimal(10,0),
   `p_count` int DEFAULT '0',
   `p_option` text,
-  `p_model_number` varchar(40),
-  `p_color` varchar(40) DEFAULT NULL,
+  `p_model_number` varchar(255),
+  `p_color` varchar(255) DEFAULT NULL,
   `p_url` varchar(255) DEFAULT NULL,
   `p_img_url` text DEFAULT NULL,
   `p_last_crawling_datetime` datetime DEFAULT CURRENT_TIMESTAMP,
@@ -76,7 +76,7 @@ DROP TABLE IF EXISTS `product_sell_history`;
 CREATE TABLE `product_sell_history` (
   `psh_id` int NOT NULL AUTO_INCREMENT,
   `p_id` int DEFAULT NULL,
-  `psh_option` varchar(50) DEFAULT NULL,
+  `psh_option` varchar(255) DEFAULT NULL,
   `psh_datetime` datetime DEFAULT NULL,
   `psh_price` int DEFAULT NULL,
   `psh_is_quickly` tinyint DEFAULT NULL,
@@ -88,7 +88,7 @@ DROP TABLE IF EXISTS `price_by_option_of_product`;
 CREATE TABLE `price_by_option_of_product` (
 	`pboop_id` INT NOT NULL AUTO_INCREMENT,
 	`p_id` INT DEFAULT NULL,
-	`pboop_option` VARCHAR(20) DEFAULT NULL,
+	`pboop_option` VARCHAR(255) DEFAULT NULL,
 	`pboop_price` INT,
 	`pboop_quick_price` INT,
 	`pboop_datetime` DATETIME DEFAULT CURRENT_TIMESTAMP,
