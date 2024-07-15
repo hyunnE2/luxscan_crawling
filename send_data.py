@@ -103,8 +103,8 @@ def send_files_via_sftp():
 
         sftp = ssh.open_sftp()
         for table in TABLE_LIST:
-            local_path = os.path.join(SAVE_PATH, f"{table}.xlsx")
-            remote_path = os.path.join(UPLOAD_PATH, f"{table}.xlsx")
+            local_path = os.path.join(SAVE_PATH, f"{table}.csv")
+            remote_path = os.path.join(UPLOAD_PATH, f"{table}.csv")
 
             if os.path.exists(local_path):
                 sftp.put(local_path, remote_path)
