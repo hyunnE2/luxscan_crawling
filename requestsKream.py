@@ -1,8 +1,5 @@
-import time
 import requests
 import json
-from openpyxl import Workbook
-import pandas as pd
 import pymysql
 import traceback
 from datetime import datetime
@@ -10,7 +7,6 @@ from py_mini_racer import py_mini_racer
 from dotenv import load_dotenv
 import os
 from fake_useragent import UserAgent
-from send_data import send_data 
 
 # Load environment variables
 load_dotenv()
@@ -24,9 +20,6 @@ DB_CONFIG = {
     'db': os.environ.get('DB_TABLE'),
     'charset': os.environ.get('CHARSET')
 }
-SAVE_PATH = os.environ.get('SAVE_PATH')
-EXCEL_PATH = os.path.join(SAVE_PATH, 'kream_test_data.xlsx')
-CSV_PATH = os.path.join(SAVE_PATH, 'kream_test_data.csv')
 LOG_FILE = 'crawling(bot_3).log'
 
 # Initialize log file
@@ -147,33 +140,6 @@ def main():
             update_last_crawled_p_id(cur, p_id)
             write_log(LOG_FILE, f"p_id : {p_id} end at :{datetime.now()}")
             conn.commit()
-
-        # Write results to Excel and CSV
-        cur.execute(
-            "SELECT p_name, p_url, pboop_option, pboop_price, pboop_quick_price, pboop_datetime "
-            "FROM price_by_option_of_product "
-            "JOIN product ON price_by_option_of_product.p_id = product.p_id"
-        )
-        rows = cur.fetchall()
-        result = pd.DataFrame(rows)
-        
-        if not os.path.exists(EXCEL_PATH):
-            wb = Workbook()
-            ws = wb.active
-            ws.title = "result_sheet"
-            wb.save(EXCEL_PATH)
-
-        with pd.ExcelWriter(EXCEL_PATH, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-            if "result_sheet" in writer.book.sheetnames:
-                idx = writer.book.sheetnames.index("result_sheet")
-                std = writer.book.worksheets[idx]
-                writer.book.remove(std)
-
-            result.to_excel(writer, sheet_name='result_sheet', index=False)
-
-        result.to_csv(CSV_PATH, index=False)
-
-        send_data()
 
     except Exception:
         err = traceback.format_exc()
