@@ -42,11 +42,11 @@ driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.
 driver.execute_cdp_cmd('Network.enable', {})
 
 try:
-    cur.execute('select b_id, b_name from brand')
+    cur.execute('select b_id, b_name from brand where b_id = 23')
     brands = cur.fetchall()
     
 
-    cur.execute('select c_id, c_name, c_is_men, c_is_woman from category')
+    cur.execute('select c_id, c_name, c_is_men, c_is_woman from category where c_id = 78')
     categories = cur.fetchall()
 
     for brand in brands:
@@ -105,9 +105,15 @@ try:
 
                     items[item_name]['url'] = base_url+driver_item.select_one('.item_inner')['href']
                     items[item_name]['img_url'] = driver_item.select_one('.product_img > img')['src']
-
-                js_items = driver.execute_script("return window.__NUXT__.state['search-tab']['productFeed']['items']")
                 
+
+                try:
+                    js_items = driver.execute_script("return window.__NUXT__.state['search-tab']['productFeed']['items']")
+                except Exception:
+                    file.write(f'bot1 : not found js_items')
+                    continue
+                
+
                 for js_item in js_items:
                     item_name = js_item['product']['release']['name']
                     items[item_name]['sales'] = js_item['product']['market']['total_sales']
