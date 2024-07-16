@@ -32,7 +32,7 @@ TABLE_LIST = [
 LOG_FILE = 'send_data.log'
 
 
-def log_message(message):
+def log_message(message, LOG_FILE=LOG_FILE):
     """Logs a message to the log file with a timestamp."""
     with open(LOG_FILE, 'a', encoding='euc-kr') as file:
         print(message)
@@ -65,15 +65,23 @@ def clean_data(data):
 
 def clean_dataframe(df):
     """Applies the clean_data function to all elements in the dataframe."""
-    return df.map(clean_data, na_action='ignore')
+    return df.applymap(clean_data, na_action='ignore')
 
 
-def save_to_excel_and_csv(rows, table):
-    """Saves rows to an Excel file and a CSV file, chunked by 10000 rows per sheet."""
+def save_to_csv(rows, table):
+    """Saves rows to multiple CSV files, chunked by 10000 rows per sheet."""
     results = [pd.DataFrame(rows[i*10000:(i+1)*10000]) for i in range((len(rows) // 10000) + 1)]
-    
+
+    for idx, result in enumerate(results):
+        result = clean_dataframe(result)
+        csv_path = os.path.join(SAVE_PATH, f"{table}_part_{idx+1}.csv")
+        result.to_csv(csv_path, index=False)
+
+
+def save_to_excel(rows, table):
+    """Saves rows to an Excel file, chunked by 10000 rows per sheet."""
+    results = [pd.DataFrame(rows[i*10000:(i+1)*10000]) for i in range((len(rows) // 10000) + 1)]
     excel_path = os.path.join(SAVE_PATH, f"{table}.xlsx")
-    csv_path = os.path.join(SAVE_PATH, f"{table}.csv")
 
     if os.path.exists(excel_path):
         os.remove(excel_path)
@@ -89,10 +97,6 @@ def save_to_excel_and_csv(rows, table):
         with pd.ExcelWriter(excel_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
             result.to_excel(writer, sheet_name=sheet_name, index=False)
 
-    if results:
-        cleaned_results = [clean_dataframe(result) for result in results]
-        pd.concat(cleaned_results).to_csv(csv_path, index=False)
-
 
 def send_files_via_sftp():
     """Uploads the files to the remote server via SFTP."""
@@ -103,15 +107,16 @@ def send_files_via_sftp():
         log_message("SSH connected")
 
         sftp = ssh.open_sftp()
-        for table in TABLE_LIST:
-            local_path = os.path.join(SAVE_PATH, f"{table}.csv")
-            remote_path = os.path.join(UPLOAD_PATH, f"{table}.csv")
+        for file_name in os.listdir(SAVE_PATH):
+            if file_name.endswith('.csv') or file_name.endswith('.xlsx'):
+                local_path = os.path.join(SAVE_PATH, file_name)
+                remote_path = os.path.join(UPLOAD_PATH, file_name)
 
-            if os.path.exists(local_path):
-                sftp.put(local_path, remote_path)
-                log_message(f"Uploaded {table} successfully.")
-            else:
-                log_message(f"File for table {table} not found.")
+                if os.path.exists(local_path):
+                    sftp.put(local_path, remote_path)
+                    log_message(f"Uploaded {file_name} successfully.")
+                else:
+                    log_message(f"File {file_name} not found.")
 
         log_message("SFTP upload completed")
 
@@ -129,6 +134,14 @@ def send_files_via_sftp():
         log_message(f"SFTP error: {e}")
 
 
+def delete_files():
+    """Deletes all CSV and XLSX files in the SAVE_PATH directory."""
+    for file_name in os.listdir(SAVE_PATH):
+        if file_name.endswith('.csv') or file_name.endswith('.xlsx'):
+            os.remove(os.path.join(SAVE_PATH, file_name))
+            log_message(f"Deleted {file_name}")
+
+
 def main():
     """Main function to run the data fetching, saving, and sending process."""
     try:
@@ -139,13 +152,10 @@ def main():
 
         for table in TABLE_LIST:
             rows = fetch_table_data(cur, table)
-            save_to_excel_and_csv(rows, table)
+            save_to_csv(rows, table)
 
         send_files_via_sftp()
-
-        for table in TABLE_LIST:
-            os.remove(os.path.join(SAVE_PATH, f"{table}.xlsx"))
-            os.remove(os.path.join(SAVE_PATH, f"{table}.csv"))
+        delete_files()
 
     except Exception as e:
         log_message(f"Error: {traceback.format_exc()}")

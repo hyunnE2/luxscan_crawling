@@ -47,7 +47,7 @@ CREATE TABLE `market` (
   PRIMARY KEY (`m_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-INSERT INTO `market` VALUES (1,'kream');
+INSERT INTO `market` VALUES (1,'kream'),(2,'tenbe'),(3,'koibito'),(4,'구구스 ');
 
 
 DROP TABLE IF EXISTS `product`;
