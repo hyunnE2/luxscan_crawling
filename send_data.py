@@ -35,6 +35,7 @@ LOG_FILE = 'send_data.log'
 def log_message(message):
     """Logs a message to the log file with a timestamp."""
     with open(LOG_FILE, 'a', encoding='euc-kr') as file:
+        print(message)
         file.write(f"{datetime.now()}: {message}\n")
 
 
@@ -64,7 +65,7 @@ def clean_data(data):
 
 def clean_dataframe(df):
     """Applies the clean_data function to all elements in the dataframe."""
-    return df.applymap(clean_data)
+    return df.map(clean_data, na_action='ignore')
 
 
 def save_to_excel_and_csv(rows, table):
@@ -79,11 +80,11 @@ def save_to_excel_and_csv(rows, table):
 
     wb = Workbook()
     ws = wb.active
-    ws.title = "result_sheet"
+    ws.title = "result_sheet_1"
     wb.save(excel_path)
 
     for idx, result in enumerate(results):
-        sheet_name = f"result_sheet_{idx+1}" if len(results) > 1 else "result_sheet"
+        sheet_name = f"result_sheet_{idx+1}"
         result = clean_dataframe(result)
         with pd.ExcelWriter(excel_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
             result.to_excel(writer, sheet_name=sheet_name, index=False)
