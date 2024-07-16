@@ -65,7 +65,7 @@ def clean_data(data):
 
 def clean_dataframe(df):
     """Applies the clean_data function to all elements in the dataframe."""
-    return df.applymap(clean_data, na_action='ignore')
+    return df.applymap(clean_data)
 
 
 def save_to_csv(rows, table):
