@@ -15,6 +15,7 @@ load_dotenv()
 SAVE_PATH = os.environ.get('SAVE_PATH')
 KEY_FILE_PATH = os.path.join(SAVE_PATH, 'luxscan_crawling.pem')
 UPLOAD_PATH = '/home/luxscan/luxscan/public/xlsx/'
+CSV_LIST_PATH = os.path.join(SAVE_PATH, 'csv_list.txt')
 
 DB_CONFIG = {
     'host': os.environ.get('HOST'),
@@ -32,11 +33,14 @@ TABLE_LIST = [
 LOG_FILE = 'send_data.log'
 
 
-def log_message(message, LOG_FILE=LOG_FILE):
+def log_message(message, log_file=LOG_FILE, type="a", show_date=True):
     """Logs a message to the log file with a timestamp."""
-    with open(LOG_FILE, 'a', encoding='euc-kr') as file:
+    with open(log_file, type, encoding='euc-kr') as file:
         print(message)
-        file.write(f"{datetime.now()}: {message}\n")
+        if show_date:
+            file.write(f"{datetime.now()}: {message}\n")
+        else:
+            file.write(f"{message}\n")
 
 
 def connect_db():
@@ -107,6 +111,7 @@ def send_files_via_sftp():
         log_message("SSH connected")
 
         sftp = ssh.open_sftp()
+        csv_list = []
         for file_name in os.listdir(SAVE_PATH):
             if file_name.endswith('.csv') or file_name.endswith('.xlsx'):
                 local_path = os.path.join(SAVE_PATH, file_name)
@@ -117,6 +122,10 @@ def send_files_via_sftp():
                     log_message(f"Uploaded {file_name} successfully.")
                 else:
                     log_message(f"File {file_name} not found.")
+            if file_name.endswith('.csv'):
+                csv_list.append(file_name)
+        log_message(','.join(csv_list), type='w+', log_file=CSV_LIST_PATH, show_date=False)
+        sftp.put(CSV_LIST_PATH, os.path.join(UPLOAD_PATH, 'csv_list.txt'))
 
         log_message("SFTP upload completed")
 
@@ -136,6 +145,8 @@ def send_files_via_sftp():
 
 def delete_files():
     """Deletes all CSV and XLSX files in the SAVE_PATH directory."""
+    os.remove(CSV_LIST_PATH)
+
     for file_name in os.listdir(SAVE_PATH):
         if file_name.endswith('.csv') or file_name.endswith('.xlsx'):
             os.remove(os.path.join(SAVE_PATH, file_name))
@@ -149,7 +160,7 @@ def main():
 
         conn = connect_db()
         cur = conn.cursor(pymysql.cursors.DictCursor)
-
+    
         for table in TABLE_LIST:
             rows = fetch_table_data(cur, table)
             save_to_csv(rows, table)
