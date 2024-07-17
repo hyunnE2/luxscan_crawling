@@ -65,7 +65,7 @@ try:
 
     cur.execute('SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,\'ONLY_FULL_GROUP_BY\',\'\'))')
 
-    cur.execute('select product.p_id as p_id, cpl_id, p_url from crawling_product_list join product on crawling_product_list.p_id = product.p_id order by cpl_id asc limit 1000')
+    cur.execute('select product.p_id as p_id, cpl_id, p_url from crawling_product_list join product on crawling_product_list.p_id = product.p_id order by cpl_id asc limit 200')
     crawling_items = cur.fetchall()
 
     for crawling_item in crawling_items:
