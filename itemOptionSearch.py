@@ -42,8 +42,8 @@ def get_last_crawled_p_id(cur):
     return int(result['cfg_value'])
 
 # Fetch products to crawl
-def fetch_products(cur, last_crawled_p_id, p_count=80, limit=500):
-    cur.execute(f"SELECT * FROM product WHERE p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
+def fetch_products(cur, last_crawled_p_id, p_count=80, limit=400):
+    cur.execute(f"SELECT * FROM product WHERE m_id = 1 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
     return cur.fetchall()
 
 # Update the last crawled product ID
@@ -127,6 +127,10 @@ def main():
         write_log(LOG_FILE, f"bot3 : loaded products {len(products)}")
 
         headers = {'user-agent': ua.random}
+
+        if len(products) < 1:
+            cur.execute("delete from config where cfg_key = 'crawled_p_id'")
+        
         for i, product in enumerate(products):
             if i % 400 == 0:
                 headers = {'user-agent': ua.random}

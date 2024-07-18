@@ -42,7 +42,7 @@ driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.
 driver.execute_cdp_cmd('Network.enable', {})
 
 try:
-    cur.execute('select b_id, b_name from brand')
+    cur.execute('select b_id, b_name from brand where b_super_id = NULL')
     brands = cur.fetchall()
     
 
@@ -50,7 +50,7 @@ try:
     categories = cur.fetchall()
 
     for brand in brands:
-        cur.execute(f'select * from product where b_id = {brand["b_id"]}')
+        cur.execute(f'select * from product where b_id = {brand["b_id"]} and m_id = 1')
         tmp = cur.fetchall()
         exist_products = {}
         for exist_product in tmp:
