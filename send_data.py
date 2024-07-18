@@ -27,7 +27,7 @@ DB_CONFIG = {
 
 TABLE_LIST = [
     'brand', 'category', 'config', 'crawling_product_list', 'market', 
-    'price_by_option_of_product', 'product', 'product_sell_history'
+    'price_by_option_of_product', 'product', 'product_sell_history', 'grade'
 ]
 
 LOG_FILE = 'send_data.log'
