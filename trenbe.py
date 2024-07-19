@@ -89,7 +89,7 @@ try:
                 # Insert data into the product table
                 sql = """
                 INSERT INTO product (m_id, b_id, p_name_kr, p_price, p_url, p_origin_price, p_count, p_option, p_model_number, p_color, p_img_url, p_last_crawling_datetime)
-                VALUES (2, %s, %s, %s, %s, 0, 0, 0, '', '', '', NOW())
+                VALUES (2, %s, %s, %s, %s, 0, 1, 0, '', '', '', NOW())
                 ON DUPLICATE KEY UPDATE p_last_crawling_datetime = NOW();
                 """
                 cur.execute(sql, (tmp_product['brand'], tmp_product['name'], tmp_product['price'], 'https://www.trenbe.com'+tmp_product['url']))

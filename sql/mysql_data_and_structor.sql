@@ -88,6 +88,7 @@ CREATE TABLE `crawling_product_list` (
 DROP TABLE IF EXISTS `product_sell_history`;
 CREATE TABLE `product_sell_history` (
   `psh_id` int NOT NULL AUTO_INCREMENT,
+  `g_id` INT,
   `p_id` int DEFAULT NULL,
   `psh_option` varchar(255) DEFAULT NULL,
   `psh_datetime` datetime DEFAULT NULL,
