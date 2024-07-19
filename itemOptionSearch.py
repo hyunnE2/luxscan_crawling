@@ -130,6 +130,8 @@ def main():
 
         if len(products) < 1:
             cur.execute("delete from config where cfg_key = 'crawled_p_id'")
+            print('deleted crawled_p_id')
+            write_log(LOG_FILE, f"bot3 : deleted crawled_p_id")
         
         for i, product in enumerate(products):
             if i % 400 == 0:
