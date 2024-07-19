@@ -130,6 +130,7 @@ def main():
 
         if len(products) < 1:
             cur.execute("delete from config where cfg_key = 'crawled_p_id'")
+            conn.commit()
             print('deleted crawled_p_id')
             write_log(LOG_FILE, f"bot3 : deleted crawled_p_id")
         
