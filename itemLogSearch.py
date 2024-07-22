@@ -14,7 +14,7 @@ import os
 
 load_dotenv()
 
-base_url = os.environ.get('BASE_URL')
+base_url = os.environ.get('KREAM_URL')
 host = os.environ.get('HOST')
 user = os.environ.get('DB_USER')
 password = os.environ.get('DB_PASSWORD')
@@ -30,11 +30,11 @@ file.write(f'start bot2 at : {datetime.now()}\n')
 
 # setting chrome options
 chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument("--headless=new")
+# chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_argument("--window-size=1920x1080")
+chrome_options.add_argument("--window-size=1920,1080")
 chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
 
 

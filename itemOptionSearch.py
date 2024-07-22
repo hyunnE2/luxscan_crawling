@@ -11,8 +11,6 @@ from fake_useragent import UserAgent
 # Load environment variables
 load_dotenv()
 
-# Setup constants and configurations
-BASE_URL = os.environ.get('BASE_URL')
 DB_CONFIG = {
     'host': os.environ.get('HOST'),
     'user': os.environ.get('DB_USER'),

@@ -13,7 +13,7 @@ import os
 
 load_dotenv()
 
-base_url = os.environ.get('BASE_URL')
+base_url = os.environ.get('KREAM_URL')
 host = os.environ.get('HOST')
 user = os.environ.get('DB_USER')
 password = os.environ.get('DB_PASSWORD')
