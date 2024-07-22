@@ -105,8 +105,8 @@ CREATE TABLE `price_by_option_of_product` (
 	`pboop_id` INT NOT NULL AUTO_INCREMENT,
 	`p_id` INT DEFAULT NULL,
 	`pboop_option` VARCHAR(255) DEFAULT NULL,
-	`pboop_price` INT,
-	`pboop_quick_price` INT,
+	`pboop_price` decimal(10,0),
+	`pboop_quick_price` decimal(10,0),
 	`pboop_datetime` DATETIME DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY (`pboop_id`),
   UNIQUE KEY `pboop_unique_key` (`p_id`,`pboop_option`)

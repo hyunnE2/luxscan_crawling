@@ -74,15 +74,9 @@ def upsert_product_prices(cur, product_id, items):
             continue
 
         price = item.get('price', item.get('lowest_normal', 0))
-        if price == None:
-            price = 0
-
         fast_price = item.get('lowest_100', 0)
-        if fast_price == None:
-            fast_price = 0
-        
         option = item.get('key', item.get('option', ''))
-        print((product_id, option, price, fast_price, datetime.now()))
+
         cur.execute(
             f"""
             INSERT INTO price_by_option_of_product(p_id, pboop_option, pboop_price, pboop_quick_price) 
