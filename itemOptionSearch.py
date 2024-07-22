@@ -20,7 +20,7 @@ DB_CONFIG = {
     'db': os.environ.get('DB_TABLE'),
     'charset': os.environ.get('CHARSET')
 }
-LOG_FILE = 'crawling(bot_3).log'
+LOG_FILE = 'itemOptionSearch.log'
 
 # Initialize log file
 def init_log(file_path):

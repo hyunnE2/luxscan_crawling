@@ -20,7 +20,7 @@ password = os.environ.get('DB_PASSWORD')
 db = os.environ.get('DB_TABLE')
 charset = os.environ.get('CHARSET')
 
-file = open('crawling(bot_1).log', 'a', encoding='euc-kr')
+file = open('itemSearch.log', 'a', encoding='euc-kr')
 file.write(f'start bot1 at : {datetime.now()}\n')
 
 conn = pymysql.connect(host=host, user=user, password=password, db=db, charset=charset)

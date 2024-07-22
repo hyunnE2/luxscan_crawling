@@ -25,7 +25,7 @@ charset = os.environ.get('CHARSET')
 crawling_id = os.environ.get('CRAWLING_ID')
 crawling_pw = os.environ.get('CRAWLING_PW')
 
-file = open('crawling(bot_2).log', 'a', encoding='euc-kr')
+file = open('itemLogSearch.log', 'a', encoding='euc-kr')
 file.write(f'start bot2 at : {datetime.now()}\n')
 
 # setting chrome options

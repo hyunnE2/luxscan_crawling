@@ -67,7 +67,7 @@ CREATE TABLE `product` (
   `p_price` decimal(10,0),
   `p_origin_price` decimal(10,0),
   `p_count` int DEFAULT '0',
-  `p_option` INT,
+  `p_option` TEXT,
   `p_model_number` VARCHAR(255),
   `p_color` VARCHAR(255) DEFAULT NULL,
   `p_url` VARCHAR(255) DEFAULT NULL,
