@@ -29,6 +29,7 @@ def init_log(file_path):
 def write_log(file_path, message):
     with open(file_path, 'a', encoding='euc-kr') as f:
         f.write(message + '\n')
+    print(message)
 
 # Fetch the last crawled product ID
 def get_last_crawled_p_id(cur):
@@ -130,7 +131,6 @@ def main():
         if len(products) < 1:
             cur.execute("delete from config where cfg_key = 'crawled_p_id'")
             conn.commit()
-            print('deleted crawled_p_id')
             write_log(LOG_FILE, f"bot3 : deleted crawled_p_id")
         
         for i, product in enumerate(products):
