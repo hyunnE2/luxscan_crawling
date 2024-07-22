@@ -82,7 +82,7 @@ def upsert_product_prices(cur, product_id, items):
             fast_price = 0
         
         option = item.get('key', item.get('option', ''))
-
+        print((product_id, option, price, fast_price, datetime.now()))
         cur.execute(
             f"""
             INSERT INTO price_by_option_of_product(p_id, pboop_option, pboop_price, pboop_quick_price) 
