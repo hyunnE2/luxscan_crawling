@@ -92,7 +92,7 @@ def upsert_product_prices(cur, product_id, items):
 def process_product(session, product, cur, ua, headers):
     response = session.get(product['p_url'], headers=headers)
     if response.status_code != 200:
-        write_log(LOG_FILE, "status_code = "+response.status_code)
+        write_log(LOG_FILE, "status_code = "+str(response.status_code))
         return False, product['p_id']
     
     script_content = extract_script_content(response.text)
