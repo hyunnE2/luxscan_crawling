@@ -12,8 +12,9 @@ import re
 load_dotenv()
 
 # Define constants
-SAVE_PATH = os.environ.get('SAVE_PATH')+'kream/'
+SAVE_PATH = os.environ.get('SAVE_PATH')
 KEY_FILE_PATH = os.path.join(SAVE_PATH, 'luxscan_crawling.pem')
+SAVE_PATH = SAVE_PATH+'kream/'
 UPLOAD_PATH = '/home/luxscan/luxscan/public/xlsx/'
 CSV_LIST_PATH = os.path.join(SAVE_PATH, 'csv_list.txt')
 
