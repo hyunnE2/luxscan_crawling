@@ -12,7 +12,7 @@ import re
 load_dotenv()
 
 # Define constants
-SAVE_PATH = os.environ.get('SAVE_PATH')
+SAVE_PATH = os.environ.get('SAVE_PATH')+'kream/'
 KEY_FILE_PATH = os.path.join(SAVE_PATH, 'luxscan_crawling.pem')
 UPLOAD_PATH = '/home/luxscan/luxscan/public/xlsx/'
 CSV_LIST_PATH = os.path.join(SAVE_PATH, 'csv_list.txt')
@@ -30,7 +30,7 @@ TABLE_LIST = [
     'price_by_option_of_product', 'product', 'product_sell_history', 'grade'
 ]
 
-LOG_FILE = 'send_data.log'
+LOG_FILE = SAVE_PATH+'send_data.log'
 
 
 def log_message(message, log_file=LOG_FILE, type="a", show_date=True):
@@ -112,7 +112,7 @@ def send_files_via_sftp():
 
         sftp = ssh.open_sftp()
         csv_list = []
-        for file_name in os.listdir(SAVE_PATH):
+        for file_name in sorted(os.listdir(SAVE_PATH)):
             if file_name.endswith('.csv') or file_name.endswith('.xlsx'):
                 local_path = os.path.join(SAVE_PATH, file_name)
                 remote_path = os.path.join(UPLOAD_PATH, file_name)

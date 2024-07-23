@@ -19,6 +19,8 @@ DB_CONFIG = {
     'charset': os.environ.get('CHARSET')
 }
 
+SAVE_PATH = os.environ.get('SAVE_PATH')+'trenbe/'
+
 chrome_options = Options()
 chrome_options.add_argument("--headless=new")  # Uncomment this if you want to run in headless mode
 chrome_options.add_argument("--disable-gpu")

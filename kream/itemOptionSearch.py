@@ -18,7 +18,10 @@ DB_CONFIG = {
     'db': os.environ.get('DB_TABLE'),
     'charset': os.environ.get('CHARSET')
 }
-LOG_FILE = 'itemOptionSearch.log'
+
+SAVE_PATH = os.environ.get('SAVE_PATH')+'kream/'
+
+LOG_FILE = SAVE_PATH+'itemOptionSearch.log'
 
 # Initialize log file
 def init_log(file_path):

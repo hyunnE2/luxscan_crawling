@@ -8,6 +8,8 @@ import os
 
 load_dotenv()
 
+SAVE_PATH = os.environ.get('SAVE_PATH')+'trenbe/'
+
 
 # Define the base URL
 base_url = "https://www.trenbe.com/used/brands?consonant={}&lang=en"
@@ -69,7 +71,7 @@ for char in range(65, 91):  # ASCII values for A-Z
 brand_get_type('Etc.')
 
 # Write the brands to a file
-with open("brand.txt", "w", encoding="utf-8") as file:
+with open(SAVE_PATH+"brand.txt", "w", encoding="utf-8") as file:
     for eng_name, kor_name in brands:
         file.write(f"{eng_name},{kor_name}\n")
 
