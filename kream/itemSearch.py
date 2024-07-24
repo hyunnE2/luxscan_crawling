@@ -14,18 +14,21 @@ import os
 load_dotenv()
 
 base_url = os.environ.get('KREAM_URL')
-host = os.environ.get('HOST')
-user = os.environ.get('DB_USER')
-password = os.environ.get('DB_PASSWORD')
-db = os.environ.get('DB_TABLE')
-charset = os.environ.get('CHARSET')
+
+DB_CONFIG = {
+    'host': os.environ.get('HOST'),
+    'user': os.environ.get('DB_USER'),
+    'password': os.environ.get('DB_PASSWORD'),
+    'db': os.environ.get('DB_TABLE'),
+    'charset': os.environ.get('CHARSET')
+}
 
 SAVE_PATH = os.environ.get('SAVE_PATH')+'kream/'
 
 file = open(SAVE_PATH+'itemSearch.log', 'a', encoding='euc-kr')
 file.write(f'start bot1 at : {datetime.now()}\n')
 
-conn = pymysql.connect(host=host, user=user, password=password, db=db, charset=charset)
+conn = pymysql.connect(**DB_CONFIG)
 cur = conn.cursor(pymysql.cursors.DictCursor)
 
 ## login 
@@ -34,7 +37,7 @@ chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_argument("--window-size=1920x1080")
+chrome_options.add_argument("--window-size=1920,1080")
 chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
 
 exe_chromedriver_path = os.environ.get('EXECUTABLE_CHROMEDRIVER_PATH')
@@ -72,7 +75,7 @@ try:
                 while True:
                     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                     
-                    time.sleep(1)
+                    time.sleep(2)
                     
                     new_height = driver.execute_script("return document.body.scrollHeight")
                     
@@ -147,6 +150,7 @@ try:
                         before_sales = result['p_count']
 
                     if before_sales != tmp['sales']:
+                        if tmp['sales'] == 0: continue
                         cur.execute('insert into crawling_product_list(p_id) values(%s)',(item_id))
 
                 conn.commit()  

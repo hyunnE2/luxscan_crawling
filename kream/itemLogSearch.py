@@ -15,11 +15,14 @@ import os
 load_dotenv()
 
 base_url = os.environ.get('KREAM_URL')
-host = os.environ.get('HOST')
-user = os.environ.get('DB_USER')
-password = os.environ.get('DB_PASSWORD')
-db = os.environ.get('DB_TABLE')
-charset = os.environ.get('CHARSET')
+
+DB_CONFIG = {
+    'host': os.environ.get('HOST'),
+    'user': os.environ.get('DB_USER'),
+    'password': os.environ.get('DB_PASSWORD'),
+    'db': os.environ.get('DB_TABLE'),
+    'charset': os.environ.get('CHARSET')
+}
 
 SAVE_PATH = os.environ.get('SAVE_PATH')+'kream/'
 
@@ -61,7 +64,7 @@ try:
 
     time.sleep(2)
 
-    conn = pymysql.connect(host=host, user=user, password=password, db=db, charset=charset)
+    conn = pymysql.connect(**DB_CONFIG)
     cur = conn.cursor(pymysql.cursors.DictCursor)
 
     cur.execute('SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,\'ONLY_FULL_GROUP_BY\',\'\'))')

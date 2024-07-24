@@ -13,7 +13,6 @@ load_dotenv()
 
 # Define constants
 SAVE_PATH = os.environ.get('SAVE_PATH')
-KEY_FILE_PATH = os.path.join(SAVE_PATH, 'luxscan_crawling.pem')
 SAVE_PATH = SAVE_PATH+'kream/'
 UPLOAD_PATH = '/home/luxscan/luxscan/public/xlsx/'
 CSV_LIST_PATH = os.path.join(SAVE_PATH, 'csv_list.txt')
@@ -108,7 +107,7 @@ def send_files_via_sftp():
     try:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect("43.200.251.231", username="luxscan", key_filename=KEY_FILE_PATH)
+        ssh.connect("43.200.251.231", username="luxscan", password="ld3Iilrn1I!yufRw@IGbm2$")
         log_message("SSH connected")
 
         sftp = ssh.open_sftp()

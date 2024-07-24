@@ -36,10 +36,10 @@ def write_log(file_path, message):
 
 # Fetch the last crawled product ID
 def get_last_crawled_p_id(cur):
-    cur.execute("SELECT * FROM config WHERE cfg_key = 'crawled_p_id'")
+    cur.execute("SELECT * FROM config WHERE cfg_key = 'kream_crawled_p_id'")
     result = cur.fetchone()
     if result is None:
-        cur.execute("INSERT INTO config(cfg_key, cfg_value) VALUES('crawled_p_id', 0)")
+        cur.execute("INSERT INTO config(cfg_key, cfg_value) VALUES('kream_crawled_p_id', 0)")
         return 0
     return int(result['cfg_value'])
 
@@ -50,7 +50,7 @@ def fetch_products(cur, last_crawled_p_id, p_count=80, limit=400):
 
 # Update the last crawled product ID
 def update_last_crawled_p_id(cur, p_id):
-    cur.execute(f"UPDATE config SET cfg_value = {p_id} WHERE cfg_key = 'crawled_p_id'")
+    cur.execute(f"UPDATE config SET cfg_value = {p_id} WHERE cfg_key = 'kream_crawled_p_id'")
 
 # Extract script content from HTML
 def extract_script_content(html_content):
@@ -132,9 +132,9 @@ def main():
         headers = {'user-agent': ua.random}
 
         if len(products) < 1:
-            cur.execute("delete from config where cfg_key = 'crawled_p_id'")
+            cur.execute("delete from config where cfg_key = 'kream_crawled_p_id'")
             conn.commit()
-            write_log(LOG_FILE, f"bot3 : deleted crawled_p_id")
+            write_log(LOG_FILE, f"bot3 : deleted kream_crawled_p_id")
         
         for i, product in enumerate(products):
             if i % 400 == 0:
