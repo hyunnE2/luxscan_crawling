@@ -63,7 +63,8 @@ try:
         while new_height < last_height:
             driver.execute_script("window.scrollBy(0, 400);")
             time.sleep(0.2)  # Adjust sleep time as needed
-            new_height = driver.execute_script("return window.scrollY + window.innerHeight") + 400
+            new_height = driver.execute_script("return window.scrollY + window.innerHeight") + 500
+            print(new_height, last_height)
 
         html = driver.page_source
         soup = BeautifulSoup(html, 'html.parser')
@@ -106,10 +107,10 @@ try:
                 # Insert data into the product table
                 sql = """
                 INSERT INTO product (m_id, b_id, p_name_kr, p_price, p_url, p_origin_price, p_count, p_option, p_model_number, p_color, p_img_url, p_last_crawling_datetime)
-                VALUES (2, %s, %s, %s, %s, 0, 1, 0, '', '', '', NOW())
+                VALUES (2, %s, %s, %s, %s, 0, 1, %s, 0, '', '', NOW())
                 ON DUPLICATE KEY UPDATE p_last_crawling_datetime = NOW();
                 """
-                cur.execute(sql, (tmp_product['brand'], tmp_product['name'], tmp_product['price'], 'https://www.trenbe.com'+tmp_product['url']))
+                cur.execute(sql, (tmp_product['brand'], tmp_product['name'], tmp_product['price'], 'https://www.trenbe.com'+tmp_product['url'], tmp_product['grade']))
                 conn.commit()
 
             except Exception as e:
