@@ -174,7 +174,7 @@ def main():
                     rows = fetch_table_data(cur, table, 'm_name, b_name, p_name, p_name_kr, p_price, p_origin_price, p_count, p_option, p_model_number, p_color, p_url, p_img_url, p_last_crawling_datetime', 'join market on market.m_id = product.m_id join brand on brand.b_id = product.b_id', f'where product.b_id = {brand["b_id"]}')
 
                     if len(rows) > 0:
-                        save_to_csv(rows, f'{table}_{brand['b_name']}')
+                        save_to_csv(rows, f'{table}_{brand["b_name"]}')
             else:
                 rows = fetch_table_data(cur, table)
 
