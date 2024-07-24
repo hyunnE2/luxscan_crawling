@@ -150,7 +150,7 @@ try:
                         before_sales = result['p_count']
 
                     if before_sales != tmp['sales']:
-                        if tmp['sales'] == 0: continue
+                        if tmp['sales'] == '0': continue
                         cur.execute('insert into crawling_product_list(p_id) values(%s)',(item_id))
 
                 conn.commit()  
