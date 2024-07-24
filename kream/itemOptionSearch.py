@@ -24,12 +24,16 @@ SAVE_PATH = os.environ.get('SAVE_PATH')+'kream/'
 LOG_FILE = SAVE_PATH+'itemOptionSearch.log'
 
 # Initialize log file
-def init_log(file_path):
-    with open(file_path, 'a', encoding='euc-kr') as f:
+def init_log(file_path, type='a'):
+    if not os.path.exists(file_path):
+        type = 'w+'
+
+    with open(file_path, type, encoding='euc-kr') as f:
         f.write(f'start bot3 at : {datetime.now()}\n')
 
 # Write log
 def write_log(file_path, message):
+
     with open(file_path, 'a', encoding='euc-kr') as f:
         f.write(message + '\n')
     print(message)

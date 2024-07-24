@@ -25,7 +25,11 @@ DB_CONFIG = {
 
 SAVE_PATH = os.environ.get('SAVE_PATH')+'kream/'
 
-file = open(SAVE_PATH+'itemSearch.log', 'a', encoding='euc-kr')
+type = 'a'
+if not os.path.exists(SAVE_PATH+'itemLogSearch.log'):
+    type = 'w+'
+
+file = open(SAVE_PATH+'itemSearch.log', type, encoding='euc-kr')
 file.write(f'start bot1 at : {datetime.now()}\n')
 
 conn = pymysql.connect(**DB_CONFIG)
