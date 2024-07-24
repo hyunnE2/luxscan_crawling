@@ -29,11 +29,7 @@ SAVE_PATH = os.environ.get('SAVE_PATH')+'kream/'
 crawling_id = os.environ.get('CRAWLING_ID')
 crawling_pw = os.environ.get('CRAWLING_PW')
 
-type = 'a'
-if not os.path.exists(SAVE_PATH+'itemLogSearch.log'):
-    type = 'w+'
-
-file = open(SAVE_PATH+'itemLogSearch.log', type, encoding='euc-kr')
+file = open(SAVE_PATH+'itemLogSearch.log', 'a', encoding='euc-kr')
 file.write(f'start bot2 at : {datetime.now()}\n')
 
 # setting chrome options

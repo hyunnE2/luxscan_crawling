@@ -35,8 +35,6 @@ LOG_FILE = SAVE_PATH+'send_data.log'
 
 def log_message(message, log_file=LOG_FILE, type="a", show_date=True):
     """Logs a message to the log file with a timestamp."""
-    if not os.path.exists(LOG_FILE):
-        type = "w+"
     with open(log_file, type, encoding='euc-kr') as file:
         print(message)
         if show_date:
