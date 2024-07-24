@@ -81,14 +81,11 @@ try:
                     
                     if new_height == last_height:
                         break
-                    print(last_height, new_height)
                     last_height = new_height
-                print(last_height, new_height)
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
 
                 driver_items = soup.select('.search_result_list > .search_result_item')
 
-                print(f'search products : {len(driver_items)}')
                 file.write(f'search products : {len(driver_items)}\n')
                 
                 for driver_item in driver_items:

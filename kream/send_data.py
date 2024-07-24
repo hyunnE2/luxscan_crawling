@@ -36,7 +36,6 @@ LOG_FILE = SAVE_PATH+'send_data.log'
 def log_message(message, log_file=LOG_FILE, type="a", show_date=True):
     """Logs a message to the log file with a timestamp."""
     with open(log_file, type, encoding='euc-kr') as file:
-        print(message)
         if show_date:
             file.write(f"{datetime.now()}: {message}\n")
         else:
@@ -53,11 +52,15 @@ def connect_db():
         raise
 
 
-def fetch_table_data(cur, table):
+def fetch_table_data(cur, table, select='*', join='', where=''):
     """Fetches all rows from the specified table."""
-    cur.execute(f"SELECT * FROM {table}")
+    cur.execute(f"SELECT {select} FROM {table} {join} {where}")
     return cur.fetchall()
 
+def fetch_brand_list(cur):
+    """Fetches the list of brands."""
+    cur.execute("SELECT b_id, b_name FROM brand")
+    return cur.fetchall()
 
 def clean_data(data):
     """Cleans the data by removing illegal characters."""
@@ -110,6 +113,8 @@ def send_files_via_sftp():
         ssh.connect("43.200.251.231", username="luxscan", password="ld3Iilrn1I!yufRw@IGbm2$")
         log_message("SSH connected")
 
+        ssh.exec_command("rm -rf /home/luxscan/luxscan/public/xlsx/*.csv")
+
         sftp = ssh.open_sftp()
         csv_list = []
         for file_name in sorted(os.listdir(SAVE_PATH)):
@@ -160,10 +165,20 @@ def main():
 
         conn = connect_db()
         cur = conn.cursor(pymysql.cursors.DictCursor)
+
+        brands = fetch_brand_list(cur)
     
         for table in TABLE_LIST:
-            rows = fetch_table_data(cur, table)
-            save_to_csv(rows, table)
+            if table == 'product':
+                for brand in brands:
+                    rows = fetch_table_data(cur, table, 'm_name, b_name, p_name, p_name_kr, p_price, p_origin_price, p_count, p_option, p_model_number, p_color, p_url, p_img_url, p_last_crawling_datetime', 'join market on market.m_id = product.m_id join brand on brand.b_id = product.b_id', f'where product.b_id = {brand['b_id']}')
+
+                    if len(rows) > 0:
+                        save_to_csv(rows, f'{table}_{brand['b_name']}')
+            else:
+                rows = fetch_table_data(cur, table)
+
+                save_to_csv(rows, table)
 
         send_files_via_sftp()
         delete_files()

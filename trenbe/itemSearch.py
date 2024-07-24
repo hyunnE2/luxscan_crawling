@@ -5,6 +5,7 @@ import time
 import re
 import pymysql
 import traceback
+from datetime import datetime
 from dotenv import load_dotenv
 import os
 
@@ -20,6 +21,19 @@ DB_CONFIG = {
 }
 
 SAVE_PATH = os.environ.get('SAVE_PATH')+'trenbe/'
+
+LOG_FILE = SAVE_PATH+'itemSearch.log'
+
+# Initialize log file
+def init_log(file_path):
+    with open(file_path, 'a', encoding='euc-kr') as f:
+        f.write(f'start at : {datetime.now()}\n')
+
+# Write log
+def write_log(file_path, message):
+    with open(file_path, 'a', encoding='euc-kr') as f:
+        f.write(message + '\n')
+    print(message)
 
 chrome_options = Options()
 chrome_options.add_argument("--headless=new")  # Uncomment this if you want to run in headless mode
@@ -37,7 +51,7 @@ driver = webdriver.Chrome(executable_path=exe_chromedriver_path, options=chrome_
 try:
     conn = pymysql.connect(**DB_CONFIG)
     cur = conn.cursor(pymysql.cursors.DictCursor)
-    
+    init_log(LOG_FILE)
     for i in range(1, 101):  # Starting range from 1 to 100
         url = f'https://www.trenbe.com/Owned?sort=latest&brandType=0&options=owned&page={i}'
         driver.get(url)
@@ -50,13 +64,14 @@ try:
             driver.execute_script("window.scrollBy(0, 400);")
             time.sleep(0.2)  # Adjust sleep time as needed
             new_height = driver.execute_script("return window.scrollY + window.innerHeight") + 400
-            print(last_height, new_height)
 
         html = driver.page_source
         soup = BeautifulSoup(html, 'html.parser')
         product_list = soup.select('#productContainer > div:nth-child(2) > div.trenbe-list-container > div > div > div > ul > div')
         
+
         for product in product_list:
+            
             try:
                 tmp_product = {
                     'url': '',
@@ -98,14 +113,12 @@ try:
                 conn.commit()
 
             except Exception as e:
-                print(f"Error inserting product: {e}")
-                traceback.print_exc()
+                write_log(LOG_FILE, f"Error inserting product: {e}")
 
         time.sleep(2)  # Pause before moving to the next page
 
 except Exception as e:
-    print(f"Error: {e}")
-    traceback.print_exc()
+    write_log(LOG_FILE, f"Error: {e}")
 finally:
     driver.quit()
     conn.close()

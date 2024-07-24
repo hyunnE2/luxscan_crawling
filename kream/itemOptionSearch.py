@@ -32,7 +32,6 @@ def init_log(file_path):
 def write_log(file_path, message):
     with open(file_path, 'a', encoding='euc-kr') as f:
         f.write(message + '\n')
-    print(message)
 
 # Fetch the last crawled product ID
 def get_last_crawled_p_id(cur):
@@ -139,7 +138,6 @@ def main():
         for i, product in enumerate(products):
             if i % 400 == 0:
                 headers = {'user-agent': ua.random}
-                print('change user-agent')
 
             success, p_id = process_product(session, product, cur, ua, headers)
             if not success:
