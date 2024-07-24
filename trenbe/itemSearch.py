@@ -123,3 +123,4 @@ except Exception as e:
 finally:
     driver.quit()
     conn.close()
+    write_log(LOG_FILE, f"End at: {datetime.now()}")

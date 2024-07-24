@@ -41,7 +41,7 @@ def write_log(file_path, message):
 
 def init_chrome_options():
     chrome_options = webdriver.ChromeOptions()
-    # chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -111,6 +111,7 @@ def __main__():
     finally:
         driver.quit()
         conn.close()
+        write_log(LOG_FILE, f"End at: {datetime.now()}")
 
 if __name__ == "__main__":
     __main__()
