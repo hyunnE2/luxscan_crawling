@@ -54,8 +54,11 @@ try:
     init_log(LOG_FILE)
     for i in range(1, 101):  # Starting range from 1 to 100
         url = f'https://www.trenbe.com/Owned?sort=latest&brandType=0&options=owned&page={i}'
+
         driver.get(url)
         time.sleep(2)
+
+        write_log(LOG_FILE, f'get url : {url}')
 
         last_height = driver.execute_script("return document.body.scrollHeight")
         new_height = 0
@@ -117,6 +120,7 @@ try:
                 write_log(LOG_FILE, f"Error inserting product: {e}")
 
         time.sleep(2)  # Pause before moving to the next page
+        write_log(LOG_FILE, f'successed : {url} at {datetime.now()}')
 
 except Exception as e:
     write_log(LOG_FILE, f"Error: {e}")
