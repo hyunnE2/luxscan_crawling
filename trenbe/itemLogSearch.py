@@ -86,7 +86,7 @@ def __main__():
         
 
         last_crawled_p_id = get_last_crawled_p_id(cur)
-        products = fetch_products(cur, last_crawled_p_id, p_count=0, limit=1)
+        products = fetch_products(cur, last_crawled_p_id, p_count=0)
         for product in products:
             driver.get('https://www.trenbe.com/product/++28257495?catalog=&options=owned&resale=true')
             time.sleep(2)
