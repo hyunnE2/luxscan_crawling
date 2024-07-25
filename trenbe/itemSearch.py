@@ -99,7 +99,7 @@ try:
                 cur.execute(f"select * from brand where b_name = '{tmp_product['brand']}'")
                 brand = cur.fetchone()
                 if brand == None:
-                    cur.execute(f"insert into brand(`b_name`) values ('{tmp_product['brand']}')")
+                    cur.execute(f"insert into brand(`m_id`, `b_name`) values (2, '{tmp_product['brand']}')")
                     cur.execute("select * from brand order by b_id desc limit 1")
                     brand = cur.fetchone()
                 else:
