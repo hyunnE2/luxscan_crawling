@@ -53,7 +53,7 @@ def get_last_crawled_p_id(cur):
     cur.execute("SELECT * FROM config WHERE cfg_key = 'trenbe_crawled_p_id'")
     result = cur.fetchone()
     if result is None:
-        # cur.execute("INSERT INTO config(cfg_key, cfg_value) VALUES('trenbe_crawled_p_id', 0)")
+        cur.execute("INSERT INTO config(cfg_key, cfg_value) VALUES('trenbe_crawled_p_id', 0)")
         return 0
     return int(result['cfg_value'])
 
@@ -88,21 +88,22 @@ def __main__():
         last_crawled_p_id = get_last_crawled_p_id(cur)
         products = fetch_products(cur, last_crawled_p_id, p_count=0)
         for product in products:
-            driver.get('https://www.trenbe.com/product/++28257495?catalog=&options=owned&resale=true')
+            driver.get(product['p_url'])
             time.sleep(2)
 
             source = BeautifulSoup(driver.page_source, 'html.parser')
             price = re.sub(r'[,\s원-]', '', source.select_one('.PriceWithTag__Price-mzv8qx-0').text)
             if price=='':
                 price=0
-            if source.select_one('.ProductOptions__ButtonGroupWrap-pq9f9q-1 > button').text.find('품절') != -1:
+            if source.select_one('.ProductOptions__ButtonGroupWrap-pq9f9q-1 > button').text.find('품절') > -1:
                 write_log(LOG_FILE, f'sold out p_id : {product["p_id"]}')
                 cur.execute(f'delete from product where p_id = {product["p_id"]}')
                 cur.execute('insert into product_sell_history(p_id, g_id, psh_datetime, psh_price, psh_is_quickly) values(%s, %s, %s, %s, 0)', (product['p_id'], grades[product['p_option']], datetime.now(), product['p_price']))
             else:
-                if int(price) != product['p_id']:
+                if int(price) != product['p_price']:
                     write_log(LOG_FILE, f'update p_id : {product["p_id"]}')
-                    cur.execute('update product set product_price = %s where p_id = %s', (price, product['p_id']))
+                    cur.execute('update product set p_price = %s and p_last_crawling_datetime = %s, p_img_url where p_id = %s', (price, datetime.now(), product['p_id']))
+            conn.commit()
 
     except Exception:
         err = traceback.format_exc()
