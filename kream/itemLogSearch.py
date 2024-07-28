@@ -75,8 +75,6 @@ try:
     for crawling_item in crawling_items:
         count = 0
 
-        sql = 'insert into product_sell_history(p_id, psh_option, psh_price, psh_is_quickly, psh_datetime) values'
-
         file.write(f'bot2 crawling url : {crawling_item["p_url"]}\n')
 
         driver.get(crawling_item['p_url'])
@@ -151,11 +149,8 @@ try:
                     count -= 1
                     continue
             
-            sql += f'({crawling_item["p_id"]}, \"{item["option"]}\", {item["price"]}, {item["quickly"]}, \"{item["date"]}\") ,'
-            valid_sql = True
-        
-        if valid_sql:
-            sql = sql[0:-2]
+            sql = f'insert into product_sell_history(p_id, psh_option, psh_price, psh_is_quickly, psh_datetime) values ({crawling_item["p_id"]}, \"{item["option"]}\", {item["price"]}, {item["quickly"]}, \"{item["date"]}\")'
+
             cur.execute(sql)
             conn.commit()
         
