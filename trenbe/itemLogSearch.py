@@ -59,7 +59,7 @@ def get_last_crawled_p_id(cur):
 
 # Fetch products to crawl
 def fetch_products(cur, last_crawled_p_id, p_count=80, limit=400):
-    cur.execute(f"SELECT * FROM product WHERE m_id = 2 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
+    cur.execute(f"SELECT * FROM product WHERE m_id = 2 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} AND p_is_possible_crawling = 1 LIMIT {limit}")
     return cur.fetchall()
 
 
