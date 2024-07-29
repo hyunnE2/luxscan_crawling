@@ -87,6 +87,11 @@ def __main__():
 
         last_crawled_p_id = get_last_crawled_p_id(cur)
         products = fetch_products(cur, last_crawled_p_id, p_count=0)
+
+        if len(products) < 1:
+            cur.execute("update config set cfg_value = 0 where cfg_key = 'trenbe_crawled_p_id'")
+            conn.commit()
+
         for product in products:
             driver.get(product['p_url'])
             time.sleep(2)
@@ -103,7 +108,9 @@ def __main__():
                 if int(price) != product['p_price']:
                     write_log(LOG_FILE, f'update p_id : {product["p_id"]}')
                     cur.execute('update product set p_price = %s and p_last_crawling_datetime = %s, p_img_url where p_id = %s', (price, datetime.now(), product['p_id']))
+            cur.execute("update config set cfg_value = %s where cfg_key = 'trenbe_crawled_p_id'", (product['p_id']))
             conn.commit()
+
 
     except Exception:
         err = traceback.format_exc()

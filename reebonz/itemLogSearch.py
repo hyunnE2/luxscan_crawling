@@ -47,13 +47,27 @@ def get_last_crawled_p_id(cur):
 
 # Fetch products to crawl
 def fetch_products(cur, last_crawled_p_id, p_count=80, limit=400):
-    cur.execute(f"SELECT * FROM product WHERE m_id = 3 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
+    cur.execute(f"SELECT * FROM product WHERE m_id = 5 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
     return cur.fetchall()
 
+def fetch_grade(cur):
+    cur.execute('select * from grade where m_id = 5')
+    tmp_grades = cur.fetchall()
+
+    grades = {}
+    for grade in tmp_grades:
+        grades[grade['g_market_grade']] = grade['g_id']
+
+    return grades
 
 def fetch_brand(cur):
-    cur.execute('select * from brand where m_id = 3')
-    return cur.fetchall()
+    cur.execute('select * from brand where m_id = 5')
+    tmp_brands = cur.fetchall()
+    brands = {}
+    for brand in tmp_brands:
+        brands[brand['b_name'].replace(' ', '')] = brand['b_id']
+
+    return brands
 
 def __main__():
     try:
@@ -62,18 +76,9 @@ def __main__():
         conn = pymysql.connect(**DB_CONFIG)
         cur = conn.cursor(pymysql.cursors.DictCursor)
 
-        cur.execute('select * from grade where m_id = 3')
-        tmp_grades = cur.fetchall()
-
-        grades = {}
-        for grade in tmp_grades:
-            grades[grade['g_market_grade']] = grade['g_id']
         
-        tmp_brands = fetch_brand(cur)
-        brands = {}
-        for brand in tmp_brands:
-            brands[brand['b_name'].replace(' ', '')] = brand['b_id']
-
+        grades = fetch_grade(cur)
+        brands = fetch_brand(cur)
 
         last_crawled_p_id = get_last_crawled_p_id(cur)
         products = fetch_products(cur, last_crawled_p_id, p_count=0)

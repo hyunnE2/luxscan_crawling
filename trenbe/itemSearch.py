@@ -24,6 +24,7 @@ SAVE_PATH = os.environ.get('SAVE_PATH')+'trenbe/'
 
 LOG_FILE = SAVE_PATH+'itemSearch.log'
 
+exe_chromedriver_path = os.environ.get('EXECUTABLE_CHROMEDRIVER_PATH')
 # Initialize log file
 def init_log(file_path):
     with open(file_path, 'a', encoding='euc-kr') as f:
@@ -35,20 +36,21 @@ def write_log(file_path, message):
         f.write(message + '\n')
     print(message)
 
-chrome_options = Options()
-chrome_options.add_argument("--headless=new")  # Uncomment this if you want to run in headless mode
-chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_argument("--window-size=1920,1080")
-chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-
-exe_chromedriver_path = os.environ.get('EXECUTABLE_CHROMEDRIVER_PATH')
-
-# Create a new instance of the Chrome driver
-driver = webdriver.Chrome(executable_path=exe_chromedriver_path, options=chrome_options)
+def init_chrome_options():
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    return chrome_options
 
 try:
+    # Create a new instance of the Chrome driver
+    chrome_options = init_chrome_options()
+    driver = webdriver.Chrome(executable_path=exe_chromedriver_path, options=chrome_options)
+
     conn = pymysql.connect(**DB_CONFIG)
     cur = conn.cursor(pymysql.cursors.DictCursor)
     init_log(LOG_FILE)
@@ -99,7 +101,7 @@ try:
                 cur.execute(f"select * from brand where b_name = '{tmp_product['brand']}'")
                 brand = cur.fetchone()
                 if brand == None:
-                    cur.execute(f"insert into brand(`m_id`, `b_name`) values (2, '{tmp_product['brand']}')")
+                    cur.execute(f"insert into brand(`m_id`, `b_name`, `b_name`) values (2, '{tmp_product['brand']}', '{tmp_product['brand']}')")
                     cur.execute("select * from brand order by b_id desc limit 1")
                     brand = cur.fetchone()
                 else:

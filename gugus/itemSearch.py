@@ -39,14 +39,21 @@ def write_log(file_path, message):
         f.write(message + '\n')
     print(message)
 
-def fetch_brand():
-    cur.execute('select * from brand where m_id = 4')
-    return cur.fetchall()
+
+def fetch_grade(cur):
+    cur.execute('select * from grade where m_id = 4')
+    tmp_grades = cur.fetchall()
+
+    grades = {}
+    for grade in tmp_grades:
+        grades[grade['g_market_grade']] = grade['g_id']
+    
+    return grades
 
 
 def init_chrome_options():
     chrome_options = webdriver.ChromeOptions()
-    # chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -59,7 +66,7 @@ try:
     cur = conn.cursor(pymysql.cursors.DictCursor)
     init_log(LOG_FILE)
 
-    brands = fetch_brand()
+    grades = fetch_grade(cur)
 
     chrome_options = init_chrome_options()
 
@@ -67,22 +74,10 @@ try:
     driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
     driver.execute_cdp_cmd('Network.enable', {})
 
-    cur.execute('select * from grade where m_id = 4')
-    tmp_grades = cur.fetchall()
-
-    grades = {}
-    for grade in tmp_grades:
-        grades[grade['g_market_grade']] = grade['g_id']
-
-
-
     url = f'{base_url}/shopping/new_update.asp?sm_date=0&PS=96&'
     i = 1
     while True:
-        driver.get(url+'GP=1='+str(i))
-
-        soup = BeautifulSoup(driver.page_source, 'html.parser')
-
+        driver.get(url+'GP='+str(i))
         time.sleep(2)
 
         last_height = driver.execute_script("return document.body.scrollHeight")
@@ -93,6 +88,8 @@ try:
             time.sleep(0.2)  # Adjust sleep time as needed
             new_height = driver.execute_script("return window.scrollY + window.innerHeight") + 300
             print(new_height, last_height)
+
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
 
         products = soup.select('.productListSec > ul > li')
         if len(products) < 1:
@@ -107,22 +104,17 @@ try:
             p_info = product.select('.txt > p')
 
             name = p_info[0].text
-            grade = grades.get(p_info[1].select_one('.condition > img')['alt'])
+            g_id = grades.get(p_info[1].select_one('.condition > img')['alt'])
             price = p_info[1].select_one('.numType1').text
             price = re.sub(r'[,\s원-]', '', price.strip())
 
-            if price.find('거래진행중') > -1:
-                price = -1
-                write_log(LOG_FILE, f"inserst product")
-
             sql = """
-            INSERT INTO product (m_id, p_name_kr, p_price, p_url, p_origin_price, p_count, p_option, p_model_number, p_color, p_img_url, p_last_crawling_datetime)
-            VALUES (3, %s, %s, %s, 0, 1, %s, 0, '', '', NOW())
+            INSERT INTO product (m_id, g_id, p_name_kr, p_price, p_url, p_origin_price, p_count, p_model_number, p_color, p_img_url, p_last_crawling_datetime)
+            VALUES (4, %s, %s, %s, %s, 0, 1, 0, '', '', NOW())
             ON DUPLICATE KEY UPDATE p_last_crawling_datetime = NOW();
             """
-            cur.execute(sql, (name, price, base_url+'/'+p_url, grade))
+            cur.execute(sql, (g_id, name, price, base_url+p_url))
             conn.commit()
-        break
         i += 1    
         
 

@@ -1,4 +1,7 @@
-import requests
+from selenium import webdriver
+
+import time
+
 from bs4 import BeautifulSoup
 import re
 import pymysql
@@ -21,6 +24,8 @@ SAVE_PATH = os.environ.get('SAVE_PATH')+'reebonz/'
 
 LOG_FILE = SAVE_PATH+'itemSearch.log'
 
+exe_chromedriver_path = os.environ.get('EXECUTABLE_CHROMEDRIVER_PATH')
+
 # Initialize log file
 def init_log(file_path):
     with open(file_path, 'a', encoding='euc-kr') as f:
@@ -32,57 +37,94 @@ def write_log(file_path, message):
         f.write(message + '\n')
     print(message)
 
-def fetch_brand():
+def fetch_brand(cur):
     cur.execute('select * from brand where m_id = 5')
-    return cur.fetchall()
+    tmp_brands = cur.fetchall()
+    brands = {}
+    for brand in tmp_brands:
+        brands[brand['b_name'].replace(' ', '')] = brand['b_id']
+
+    return brands
+    
+def fetch_grade(cur):
+    cur.execute('select * from grade where m_id = 5')
+    tmp_grades = cur.fetchall()
+
+    grades = {}
+    for grade in tmp_grades:
+        grades[grade['g_market_grade']] = grade['g_id']
+
+    return grades
+
+def init_chrome_options():
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    return chrome_options
+
 
 try:
     conn = pymysql.connect(**DB_CONFIG)
     cur = conn.cursor(pymysql.cursors.DictCursor)
     init_log(LOG_FILE)
+    
+    brands = fetch_brand(cur)
+    grades = fetch_grade(cur)
 
-    brands = fetch_brand()
+    chrome_options = init_chrome_options()
+    driver = webdriver.Chrome(executable_path=exe_chromedriver_path, options=chrome_options)
+    driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
+    driver.execute_cdp_cmd('Network.enable', {})
 
+    url = f'{base_url}/events/28635'
+    driver.get(url)
+    time.sleep(2)
 
-    url = f'{base_url}/update_goods.html'
-    i = 1
-    while True:
-        response = requests.get(url+'?page='+str(i))
-        if response.status_code != 200:
-            write_log(LOG_FILE, f"break : status code is {response.status_code}")
-            break
+    last_height = driver.execute_script("return document.body.scrollHeight")
+    new_height = 0
 
-        soup = BeautifulSoup(response.content, 'html.parser')
-        products = soup.select('#product_list > ul > li')
+    while new_height < last_height:
+        driver.execute_script("window.scrollBy(0, 400);")
+        time.sleep(0.2)  # Adjust sleep time as needed
+        new_height = driver.execute_script("return window.scrollY + window.innerHeight") + 300
+        print(new_height, last_height)
 
-        if len(products) < 1:
-            if i == 1:
-                write_log(LOG_FILE, f'not found products')
-            break
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    products = soup.select('.products-list__grid2 > div')
+
+    if len(products) < 1:
+        write_log(LOG_FILE, f'not found products')
+    else:
+        write_log(LOG_FILE, f"loaded product count : {len(products)}")
+        
+    for product in products:
+        
+        p_url = product.select_one('a')['href']
+        brand = product.select_one('.first-desc').text
+        grade = product.select_one('.img-box').text
+        g_id = grades.get(grade)
+        name = product.select_one('.product-name').text
+        price = re.sub(r'[,\s원-]', '', product.select_one('.price').text.strip())
+
+        if brands.get(brand) == None:
+            cur.execute(f"insert into brand(`m_id`, `b_name`, `b_search_keyword`) values (5, '{brand}', '{brand}')")
+            cur.execute("select * from brand where m_id = 5 order by b_id desc limit 1")
+            b_id = cur.fetchone()['b_id']
         else:
-            write_log(LOG_FILE, f"loaded product count : {len(products)}")
-            
-        for product in products:
-            tables = product.select('table')
-            p_url = product.select_one('a')['href']
-            name = re.sub(r'[,\s원-]', '', tables[0].text.strip())
-            tds = tables[1].select('td')
-            
-            grade = re.sub(r'[\s]', '', tds[0].text.strip())
-            price = re.sub(r'[,\s원-]', '', tds[1].text.strip())
+            b_id = brands.get(brand)
 
-            if price.find('거래진행중') > -1:
-                price = -1
-                write_log(LOG_FILE, f"inserst product")
-
-            sql = """
-            INSERT INTO product (m_id, p_name_kr, p_price, p_url, p_origin_price, p_count, p_option, p_model_number, p_color, p_img_url, p_last_crawling_datetime)
-            VALUES (3, %s, %s, %s, 0, 1, %s, 0, '', '', NOW())
-            ON DUPLICATE KEY UPDATE p_last_crawling_datetime = NOW();
-            """
-            cur.execute(sql, (name, price, base_url+'/'+p_url, grade))
-            conn.commit()
-        i += 1    
+        sql = """
+        INSERT INTO product (m_id, g_id, b_id, p_name_kr, p_price, p_url, p_origin_price, p_count, p_model_number, p_color, p_img_url, p_last_crawling_datetime)
+        VALUES (5, %s, %s, %s, %s, %s, 0, 1, 0, '', '', NOW())
+        ON DUPLICATE KEY UPDATE p_last_crawling_datetime = NOW();
+        """
+        cur.execute(sql, (g_id, b_id, name, price, base_url+'/'+p_url))
+        conn.commit()
+        break
         
 
 except Exception as e:

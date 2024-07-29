@@ -41,7 +41,7 @@ def get_last_crawled_p_id(cur):
     cur.execute("SELECT * FROM config WHERE cfg_key = 'koibito_crawled_p_id'")
     result = cur.fetchone()
     if result is None:
-        # cur.execute("INSERT INTO config(cfg_key, cfg_value) VALUES('koibito_crawled_p_id', 0)")
+        cur.execute("INSERT INTO config(cfg_key, cfg_value) VALUES('koibito_crawled_p_id', 0)")
         return 0
     return int(result['cfg_value'])
 
@@ -53,7 +53,14 @@ def fetch_products(cur, last_crawled_p_id, p_count=80, limit=400):
 
 def fetch_brand(cur):
     cur.execute('select * from brand where m_id = 3')
-    return cur.fetchall()
+    tmp_brands = cur.fetchall()
+    
+    brands = {}
+    for brand in tmp_brands:
+        brands[brand['b_name'].replace(' ', '')] = brand['b_id']
+    return brands
+
+
 
 def __main__():
     try:
@@ -61,22 +68,17 @@ def __main__():
 
         conn = pymysql.connect(**DB_CONFIG)
         cur = conn.cursor(pymysql.cursors.DictCursor)
-
-        cur.execute('select * from grade where m_id = 3')
-        tmp_grades = cur.fetchall()
-
-        grades = {}
-        for grade in tmp_grades:
-            grades[grade['g_market_grade']] = grade['g_id']
         
-        tmp_brands = fetch_brand(cur)
-        brands = {}
-        for brand in tmp_brands:
-            brands[brand['b_name'].replace(' ', '')] = brand['b_id']
+        brands = fetch_brand(cur)
 
 
         last_crawled_p_id = get_last_crawled_p_id(cur)
         products = fetch_products(cur, last_crawled_p_id, p_count=0)
+
+        if len(products) < 1:
+            cur.execute("update config set cfg_value = 0 where cfg_key = 'koibito_crawled_p_id'")
+            conn.commit()
+
         for product in products:
             response = requests.get(product['p_url'])
             print(product['p_url'])
@@ -96,11 +98,13 @@ def __main__():
 
             is_sold_out = soup.select_one(".button.orange.order")
             if is_sold_out == None:
+                cur.execute(f"update product set b_id = {b_id}, p_img_url='{img_urls}', p_last_crawling_datetime='{datetime.now()}', p_is_possible_crawling = 0 where p_id = {product['p_id']}")
                 write_log(LOG_FILE, f"sold out p_id : {product['p_id']}")
             else:
-                cur.execute(f"update product set b_id = {b_id}, p_img_url='{img_urls}' where p_id = {product['p_id']}")
+                cur.execute(f"update product set b_id = {b_id}, p_img_url='{img_urls}', p_last_crawling_datetime='{datetime.now()}' where p_id = {product['p_id']}")
                 write_log(LOG_FILE, f"exists p_id : {product['p_id']}")
-            break
+            cur.execute("update config set cfg_value = %s where cfg_key = 'koibito_crawled_p_id'", (product['p_id']))
+            conn.commit()
 
 
     except Exception:
