@@ -1,13 +1,11 @@
 from selenium import webdriver
-
+from selenium.common.exceptions import UnexpectedAlertPresentException, NoAlertPresentException
 from bs4 import BeautifulSoup
-
 import time
 import traceback
 import pymysql
 import re
 from datetime import datetime
-
 from dotenv import load_dotenv
 import os
 
@@ -21,11 +19,9 @@ DB_CONFIG = {
     'charset': os.environ.get('CHARSET')
 }
 
-SAVE_PATH = os.environ.get('SAVE_PATH')+'gugus/'
-
+SAVE_PATH = os.environ.get('SAVE_PATH') + 'gugus/'
 exe_chromedriver_path = os.environ.get('EXECUTABLE_CHROMEDRIVER_PATH')
-
-LOG_FILE = SAVE_PATH+'itemLogSearch.log'
+LOG_FILE = SAVE_PATH + 'itemLogSearch.log'
 
 # Initialize log file
 def init_log(file_path):
@@ -51,17 +47,13 @@ def fetch_products(cur, last_crawled_p_id, p_count=80, limit=400):
     cur.execute(f"SELECT * FROM product WHERE m_id = 4 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
     return cur.fetchall()
 
-
 def fetch_brand(cur):
     cur.execute('select * from brand where m_id = 4')
-
     tmp_brands = cur.fetchall()
     brands = {}
     for brand in tmp_brands:
         brands[brand['b_name'].replace(' ', '')] = brand['b_id']
-    
-    return brands 
-
+    return brands
 
 def init_chrome_options():
     chrome_options = webdriver.ChromeOptions()
@@ -87,7 +79,6 @@ def __main__():
 
         brands = fetch_brand(cur)
 
-
         last_crawled_p_id = get_last_crawled_p_id(cur)
         products = fetch_products(cur, last_crawled_p_id, p_count=0)
 
@@ -98,9 +89,19 @@ def __main__():
         for product in products:
             print(product['p_url'])
             driver.get(product['p_url'])
-            
             time.sleep(2)
-            
+
+            try:
+                alert = driver.switch_to.alert
+                alert_text = alert.text
+                if '상품이 존재하지 않습니다' in alert_text:
+                    cur.execute("update product set p_is_possible_crawling = %s, p_last_crawling_datetime = %s where p_id = %s", (0, datetime.now(), product['p_id']))
+                    cur.execute("insert into product_sell_history(p_id, psh_datetime, psh_price) values(%s, %s, %s)", (product['p_id'], datetime.now(), product['p_price']))
+                    alert.accept()  # Alert 닫기
+                    continue  # 다음 제품으로 넘어가기
+            except NoAlertPresentException:
+                pass  # 알림창이 없으면 계속 진행
+
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             info = soup.select_one('.info.container')
 
@@ -120,8 +121,6 @@ def __main__():
                 if title == '컬러':
                     color = re.sub(r'[\s]', '', contents[idx].text.strip())
             
-            print(brand, price, color)
-            
             if brands.get(brand) == None:
                 cur.execute("insert into brand(m_id, b_name, b_search_keyword) values(4,%s, %s)", (brand, brand))
                 cur.execute("select * from brand where m_id = 4 order by b_id desc")
@@ -130,10 +129,8 @@ def __main__():
                 b_id = brands.get(brand)
 
             cur.execute("update product set b_id = %s, p_price = %s, p_color = %s, p_last_crawling_datetime = %s where p_id = %s", (b_id, price, color, datetime.now(), product['p_id']))
-            
             cur.execute("update config set cfg_value = %s where cfg_key = 'gugus_crawled_p_id'", (product['p_id']))
             conn.commit()
-
 
     except Exception:
         err = traceback.format_exc()

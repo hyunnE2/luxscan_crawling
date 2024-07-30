@@ -48,7 +48,7 @@ CREATE TABLE `grade`(
   `g_comment` varchar(255),
   PRIMARY KEY (`g_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-INSERT INTO `grade`(`m_id`, `g_grade`, `g_market_grade`) VALUES (1, 'S+', '100'), (2, 'S+', 'S+'), (2, 'A+', 'A+'), (2, 'A', 'A'), (2, 'B+', 'B+'), (2, 'B', 'B'), (3, 'S+', 'N'), (3, 'S+', 'S'), (3, 'S+', 'SA'), (3, 'A+', 'A+'), (3, 'A', 'A'), (3, 'A', 'A-'), (3, 'B+', 'AB'), (3, 'B+', 'B'), (3, 'B', 'BC'), (3, 'B', 'C'), (4, 'S+', 'N-S'), (4, 'A+', 'A+'), (4, 'A', 'A'), (4, 'B+', 'B+'), (4, 'B', 'B'), (4, 'null', 'USED'), (5, 'S+', 'unused'), (5, 'A+', 'perpect'), (5, 'A', 'excellent'), (5, 'B+', 'very-good'), (5, 'B+', 'good'), (5, 'B', 'normal');
+INSERT INTO `grade`(`m_id`, `g_grade`, `g_market_grade`) VALUES (1, 'S+', '100'), (2, 'S+', 'S+'), (2, 'A+', 'A+'), (2, 'A', 'A'), (2, 'B+', 'B+'), (2, 'B', 'B'), (3, 'S+', 'N'), (3, 'S+', 'S'), (3, 'S+', 'SA'), (3, 'A+', 'A+'), (3, 'A', 'A'), (3, 'A', 'A-'), (3, 'B+', 'AB'), (3, 'B+', 'B'), (3, 'B', 'BC'), (3, 'B', 'C'), (4, 'S+', 'N-S'), (4, 'A+', 'A+'), (4, 'A', 'A'), (4, 'B+', 'B+'), (4, 'B', 'B'), (4, 'null', 'USED'), (5, 'S+', 'unused'), (5, 'A+', 'perfect'), (5, 'A', 'excellent'), (5, 'B+', 'very-good'), (5, 'B+', 'good'), (5, 'B', 'normal');
 
 
 DROP TABLE IF EXISTS `config`;

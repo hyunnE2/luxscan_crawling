@@ -122,13 +122,12 @@ try:
         VALUES (5, %s, %s, %s, %s, %s, 0, 1, 0, '', '', NOW())
         ON DUPLICATE KEY UPDATE p_last_crawling_datetime = NOW();
         """
-        cur.execute(sql, (g_id, b_id, name, price, base_url+'/'+p_url))
+        cur.execute(sql, (g_id, b_id, name, price, base_url+p_url))
         conn.commit()
-        break
-        
 
 except Exception as e:
     write_log(LOG_FILE, f"Error: {e}")
 finally:
     conn.close()
+    driver.quit()
     write_log(LOG_FILE, f"End at: {datetime.now()}")

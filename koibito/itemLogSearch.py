@@ -96,8 +96,8 @@ def __main__():
             if brands.get(brand) != None:
                 b_id = brands[brand]
 
-            is_sold_out = soup.select_one(".button.orange.order")
-            if is_sold_out == None:
+            is_sold_out = soup.select_one(".detail_info_title > .infor_price").text
+            if is_sold_out.find('품절') > -1:
                 cur.execute(f"update product set b_id = {b_id}, p_img_url='{img_urls}', p_last_crawling_datetime='{datetime.now()}', p_is_possible_crawling = 0 where p_id = {product['p_id']}")
                 write_log(LOG_FILE, f"sold out p_id : {product['p_id']}")
             else:
