@@ -1,5 +1,6 @@
 from selenium import webdriver
-
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
 import time
 
 from bs4 import BeautifulSoup
@@ -86,12 +87,21 @@ try:
 
     last_height = driver.execute_script("return document.body.scrollHeight")
     new_height = 0
+    while True:
+        while new_height < last_height:
+            driver.execute_script("window.scrollBy(0, 400);")
+            time.sleep(0.2)  # Adjust sleep time as needed
+            new_height = driver.execute_script("return window.scrollY + window.innerHeight") + 300
+            print(new_height, last_height)
 
-    while new_height < last_height:
-        driver.execute_script("window.scrollBy(0, 400);")
-        time.sleep(0.2)  # Adjust sleep time as needed
-        new_height = driver.execute_script("return window.scrollY + window.innerHeight") + 300
-        print(new_height, last_height)
+        try:
+            btn = driver.find_element(By.CSS_SELECTOR, "button.btn.btn--more")
+
+            btn.click()
+            time.sleep(2)
+            last_height = driver.execute_script("return document.body.scrollHeight") + 300
+        except NoSuchElementException:
+            break
 
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     products = soup.select('.products-list__grid2 > div')
