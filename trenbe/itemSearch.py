@@ -34,7 +34,6 @@ def init_log(file_path):
 def write_log(file_path, message):
     with open(file_path, 'a', encoding='euc-kr') as f:
         f.write(message + '\n')
-    print(message)
 
 def init_chrome_options():
     chrome_options = webdriver.ChromeOptions()
@@ -69,7 +68,6 @@ try:
             driver.execute_script("window.scrollBy(0, 400);")
             time.sleep(0.2)  # Adjust sleep time as needed
             new_height = driver.execute_script("return window.scrollY + window.innerHeight") + 500
-            print(new_height, last_height)
 
         html = driver.page_source
         soup = BeautifulSoup(html, 'html.parser')

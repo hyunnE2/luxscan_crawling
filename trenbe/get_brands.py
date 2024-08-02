@@ -75,6 +75,5 @@ with open(SAVE_PATH+"brand.txt", "w", encoding="utf-8") as file:
     for eng_name, kor_name in brands:
         file.write(f"{eng_name},{kor_name}\n")
 
-print("Brands have been successfully saved to brand.txt")
 
 driver.quit()

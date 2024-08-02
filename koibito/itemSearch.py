@@ -30,7 +30,6 @@ def init_log(file_path):
 def write_log(file_path, message):
     with open(file_path, 'a', encoding='euc-kr') as f:
         f.write(message + '\n')
-    print(message)
 
 def fetch_grade(cur):
     cur.execute('select * from grade where m_id = 3')

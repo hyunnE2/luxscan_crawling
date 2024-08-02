@@ -36,7 +36,6 @@ def init_log(file_path):
 def write_log(file_path, message):
     with open(file_path, 'a', encoding='euc-kr') as f:
         f.write(message + '\n')
-    print(message)
 
 def fetch_brand(cur):
     cur.execute('select * from brand where m_id = 5')
@@ -92,7 +91,6 @@ try:
             driver.execute_script("window.scrollBy(0, 400);")
             time.sleep(0.2)  # Adjust sleep time as needed
             new_height = driver.execute_script("return window.scrollY + window.innerHeight") + 300
-            print(new_height, last_height)
 
         try:
             btn = driver.find_element(By.CSS_SELECTOR, "button.btn.btn--more")

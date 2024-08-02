@@ -1,5 +1,5 @@
 from selenium import webdriver
-from selenium.common.exceptions import UnexpectedAlertPresentException, NoAlertPresentException
+from selenium.common.exceptions import NoAlertPresentException
 from bs4 import BeautifulSoup
 import time
 import traceback
@@ -32,7 +32,6 @@ def init_log(file_path):
 def write_log(file_path, message):
     with open(file_path, 'a', encoding='euc-kr') as f:
         f.write(message + '\n')
-    print(message)
 
 def get_last_crawled_p_id(cur):
     cur.execute("SELECT * FROM config WHERE cfg_key = 'gugus_crawled_p_id'")
@@ -87,7 +86,6 @@ def __main__():
             conn.commit()
 
         for product in products:
-            print(product['p_url'])
             driver.get(product['p_url'])
             time.sleep(2)
 
@@ -107,7 +105,8 @@ def __main__():
 
             titles = info.select('dt')
             contents = info.select('dd')
-
+            img_urls = ','.join([i['src'] for i in soup.select('.img > .more > .thumb > li > input')])
+            
             brand = ""
             price = "0"
             color = ""
@@ -128,13 +127,12 @@ def __main__():
             else:
                 b_id = brands.get(brand)
 
-            cur.execute("update product set b_id = %s, p_price = %s, p_color = %s, p_last_crawling_datetime = %s where p_id = %s", (b_id, price, color, datetime.now(), product['p_id']))
+            cur.execute("update product set b_id = %s, p_price = %s, p_color = %s, p_img_url = %s, p_last_crawling_datetime = %s where p_id = %s", (b_id, price, color, img_urls, datetime.now(), product['p_id']))
             cur.execute("update config set cfg_value = %s where cfg_key = 'gugus_crawled_p_id'", (product['p_id']))
             conn.commit()
 
     except Exception:
         err = traceback.format_exc()
-        print(err)
 
     finally:
         conn.close()

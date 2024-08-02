@@ -1,12 +1,11 @@
+from selenium import webdriver
+from selenium.common.exceptions import NoAlertPresentException
+from bs4 import BeautifulSoup
 import time
 import traceback
 import pymysql
 import re
-
-import requests
-from bs4 import BeautifulSoup
 from datetime import datetime
-
 from dotenv import load_dotenv
 import os
 
@@ -20,11 +19,9 @@ DB_CONFIG = {
     'charset': os.environ.get('CHARSET')
 }
 
-SAVE_PATH = os.environ.get('SAVE_PATH')+'koibito/'
-
+SAVE_PATH = os.environ.get('SAVE_PATH') + 'reebonz/'
 exe_chromedriver_path = os.environ.get('EXECUTABLE_CHROMEDRIVER_PATH')
-
-LOG_FILE = SAVE_PATH+'itemLogSearch.log'
+LOG_FILE = SAVE_PATH + 'itemLogSearch.log'
 
 # Initialize log file
 def init_log(file_path):
@@ -35,13 +32,12 @@ def init_log(file_path):
 def write_log(file_path, message):
     with open(file_path, 'a', encoding='euc-kr') as f:
         f.write(message + '\n')
-    print(message)
 
 def get_last_crawled_p_id(cur):
-    cur.execute("SELECT * FROM config WHERE cfg_key = 'koibito_crawled_p_id'")
+    cur.execute("SELECT * FROM config WHERE cfg_key = 'reebonz_crawled_p_id'")
     result = cur.fetchone()
     if result is None:
-        # cur.execute("INSERT INTO config(cfg_key, cfg_value) VALUES('koibito_crawled_p_id', 0)")
+        cur.execute("INSERT INTO config(cfg_key, cfg_value) VALUES('reebonz_crawled_p_id', 0)")
         return 0
     return int(result['cfg_value'])
 
@@ -50,24 +46,23 @@ def fetch_products(cur, last_crawled_p_id, p_count=80, limit=400):
     cur.execute(f"SELECT * FROM product WHERE m_id = 5 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
     return cur.fetchall()
 
-def fetch_grade(cur):
-    cur.execute('select * from grade where m_id = 5')
-    tmp_grades = cur.fetchall()
-
-    grades = {}
-    for grade in tmp_grades:
-        grades[grade['g_market_grade']] = grade['g_id']
-
-    return grades
-
 def fetch_brand(cur):
     cur.execute('select * from brand where m_id = 5')
     tmp_brands = cur.fetchall()
     brands = {}
     for brand in tmp_brands:
         brands[brand['b_name'].replace(' ', '')] = brand['b_id']
-
     return brands
+
+def init_chrome_options():
+    chrome_options = webdriver.ChromeOptions()
+    # chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--window-size=1920,960")
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    return chrome_options
 
 def __main__():
     try:
@@ -75,38 +70,46 @@ def __main__():
 
         conn = pymysql.connect(**DB_CONFIG)
         cur = conn.cursor(pymysql.cursors.DictCursor)
-
         
-        grades = fetch_grade(cur)
+        chrome_options = init_chrome_options()
+        driver = webdriver.Chrome(executable_path=exe_chromedriver_path, options=chrome_options)
+        driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
+        driver.execute_cdp_cmd('Network.enable', {})
+
         brands = fetch_brand(cur)
 
         last_crawled_p_id = get_last_crawled_p_id(cur)
         products = fetch_products(cur, last_crawled_p_id, p_count=0)
+
+        if len(products) < 1:
+            cur.execute("update config set cfg_value = 0 where cfg_key = 'reebonz_crawled_p_id'")
+            conn.commit()
+
         for product in products:
-            response = requests.get(product['p_url'])
             print(product['p_url'])
-            if response.status_code != 200:
-                write_log(LOG_FILE, f"break : status code is {response.status_code}")
-                break
+            driver.get(product['p_url'])
 
-            soup = BeautifulSoup(response.content, 'html.parser')
-            imgs = soup.select('center> table:nth-child(7) > form > tr > td > table > tr > td > div > table > tr > td:nth-child(1) > table > tr:nth-child(2) img')
-            img_urls = ','.join([img['src'] for img in imgs])
-
-            brand = re.sub(r'[,\s]', '', soup.select(".detail_info_list > .info_list_basic > dd")[0].text.strip())
-            brand = brand[:brand.find('(')]
-            b_id = 0
-            if brands.get(brand) != None:
-                b_id = brands[brand]
-
-            is_sold_out = soup.select_one(".button.orange.order")
-            if is_sold_out == None:
-                write_log(LOG_FILE, f"sold out p_id : {product['p_id']}")
+            time.sleep(5)
+            soup = BeautifulSoup(driver.page_source, 'html.parser')
+            buy_btn = soup.select_one('#buttonsArea > ul')
+            if buy_btn == None:
+                write_log(LOG_FILE, f"not inserted p_url {product['p_url']}") 
+                print(soup.select_one('#buttonsArea'))
+            elif soup.select_one('#buttonsArea > ul').text.find('구매하기') < 0:
+                write_log(LOG_FILE, f"p_url {product['p_url']}")    
+            
+            
+            continue
+            if brands.get(brand) == None:
+                cur.execute("insert into brand(m_id, b_name, b_search_keyword) values(5,%s, %s)", (brand, brand))
+                cur.execute("select * from brand where m_id = 5 order by b_id desc")
+                b_id = cur.fetchone()['b_id']
             else:
-                cur.execute(f"update product set b_id = {b_id}, p_img_url='{img_urls}' where p_id = {product['p_id']}")
-                write_log(LOG_FILE, f"exists p_id : {product['p_id']}")
-            break
+                b_id = brands.get(brand)
 
+            cur.execute("update product set b_id = %s, p_price = %s, p_color = %s, p_last_crawling_datetime = %s where p_id = %s", (b_id, price, color, datetime.now(), product['p_id']))
+            cur.execute("update config set cfg_value = %s where cfg_key = 'reebonz_crawled_p_id'", (product['p_id']))
+            conn.commit()
 
     except Exception:
         err = traceback.format_exc()
@@ -114,6 +117,7 @@ def __main__():
 
     finally:
         conn.close()
+        driver.quit()
         write_log(LOG_FILE, f"End at: {datetime.now()}")
 
 if __name__ == "__main__":

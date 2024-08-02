@@ -35,7 +35,6 @@ def init_log(file_path):
 def write_log(file_path, message):
     with open(file_path, 'a', encoding='euc-kr') as f:
         f.write(message + '\n')
-    print(message)
 
 def get_last_crawled_p_id(cur):
     cur.execute("SELECT * FROM config WHERE cfg_key = 'koibito_crawled_p_id'")
@@ -81,7 +80,6 @@ def __main__():
 
         for product in products:
             response = requests.get(product['p_url'])
-            print(product['p_url'])
             if response.status_code != 200:
                 write_log(LOG_FILE, f"break : status code is {response.status_code}")
                 break
@@ -109,7 +107,6 @@ def __main__():
 
     except Exception:
         err = traceback.format_exc()
-        print(err)
 
     finally:
         conn.close()

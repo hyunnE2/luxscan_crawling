@@ -36,7 +36,6 @@ def init_log(file_path):
 def write_log(file_path, message):
     with open(file_path, 'a', encoding='euc-kr') as f:
         f.write(message + '\n')
-    print(message)
 
 
 def init_chrome_options():
@@ -114,7 +113,6 @@ def __main__():
 
     except Exception:
         err = traceback.format_exc()
-        print(err)
 
     finally:
         driver.quit()
