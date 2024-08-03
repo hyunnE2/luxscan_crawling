@@ -6,6 +6,7 @@ import traceback
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import ElementNotInteractableException
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -78,8 +79,12 @@ try:
         file.write(f'bot2 crawling url : {crawling_item["p_url"]}\n')
 
         driver.get(crawling_item['p_url'])
-        time.sleep(3)
-        driver.find_element(By.CSS_SELECTOR, '.tab_content > .outlinegrey').click()        
+        time.sleep(2)
+        try:
+            driver.find_element(By.CSS_SELECTOR, '.tab_content > .outlinegrey').click()        
+        except ElementNotInteractableException:
+            continue
+            
 
         cur.execute(f'select count(*) as count, date(psh_datetime) as psh_datetime from product_sell_history where p_id = {crawling_item["p_id"]} group by psh_datetime order by psh_datetime desc')
         last_data = cur.fetchone()
