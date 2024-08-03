@@ -132,10 +132,10 @@ try:
                         result = None
                     before_sales = 0
                     
-                    sql = "insert into product (m_id, b_id, g_id, p_name, p_name_kr, p_price, p_origin_price, p_count, p_option, p_model_number, p_color, p_url, p_img_url) values(%s, %s, 1, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+                    sql = "insert into product (m_id, b_id, c_id, g_id, p_name, p_name_kr, p_price, p_origin_price, p_count, p_option, p_model_number, p_color, p_url, p_img_url) values(%s, %s, %s, 1, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
                     # crawling list에 리스트 업하고 product에 데이터를 삽입하는 코드
                     if result == None:
-                        cur.execute(sql, (tmp['market_id'], tmp['brand_id'], tmp['name'], tmp['kr_name'], tmp['price'], tmp['origin_price'], tmp['sales'], tmp['option'], tmp['model_number'], tmp['color'], tmp['url'],  tmp['img_url']))
+                        cur.execute(sql, (tmp['market_id'], tmp['brand_id'], category['c_id'], tmp['name'], tmp['kr_name'], tmp['price'], tmp['origin_price'], tmp['sales'], tmp['option'], tmp['model_number'], tmp['color'], tmp['url'],  tmp['img_url']))
                         cur.execute('select * from product order by p_id desc')
                         item_id = cur.fetchone()['p_id']
                     # product의 count 값이 바뀌었으면 crawling list에 리스트업 아니면 프로덕트 데이터만 변경해주는 코드
@@ -150,7 +150,7 @@ try:
                         if tmp['sales'] == '0': continue
                         cur.execute('insert into crawling_product_list(p_id) values(%s)',(item_id))
 
-                conn.commit()  
+                conn.commit()
             file.write(f'bot1 : {brand} {category} ended : {datetime.now()}\n')
             file.flush()
 
