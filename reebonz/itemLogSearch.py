@@ -1,5 +1,5 @@
 from selenium import webdriver
-from selenium.common.exceptions import NoAlertPresentException
+from selenium.common.exceptions import UnexpectedAlertPresentException
 from bs4 import BeautifulSoup
 import time
 import traceback
@@ -46,23 +46,20 @@ def fetch_products(cur, last_crawled_p_id, p_count=80, limit=400):
     cur.execute(f"SELECT * FROM product WHERE m_id = 5 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
     return cur.fetchall()
 
-def fetch_brand(cur):
-    cur.execute('select * from brand where m_id = 5')
-    tmp_brands = cur.fetchall()
-    brands = {}
-    for brand in tmp_brands:
-        brands[brand['b_name'].replace(' ', '')] = brand['b_id']
-    return brands
-
 def init_chrome_options():
     chrome_options = webdriver.ChromeOptions()
-    # chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--window-size=1920,960")
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
     return chrome_options
+
+def product_update(cur, product, is_selled):
+    cur.execute('update product set p_is_possible_crawling=%s, p_price=%s, p_img_url=%s, p_last_crawling_datetime=%s where p_id=%s', (0 if is_selled else 1, product['p_price'], product['p_img_url'], datetime.now(), product['p_id']))
+    if is_selled:
+        cur.execute('insert into product_sell_history(`p_id`, `g_id`, `psh_datetime`, `psh_price`) values(%s, %s, %s, %s)', (product['p_id'], product['g_id'], datetime.now(), product['p_price']))
 
 def __main__():
     try:
@@ -76,7 +73,6 @@ def __main__():
         driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
         driver.execute_cdp_cmd('Network.enable', {})
 
-        brands = fetch_brand(cur)
 
         last_crawled_p_id = get_last_crawled_p_id(cur)
         products = fetch_products(cur, last_crawled_p_id, p_count=0)
@@ -86,28 +82,24 @@ def __main__():
             conn.commit()
 
         for product in products:
-            print(product['p_url'])
             driver.get(product['p_url'])
-
             time.sleep(5)
-            soup = BeautifulSoup(driver.page_source, 'html.parser')
-            buy_btn = soup.select_one('#buttonsArea > ul')
-            if buy_btn == None:
-                write_log(LOG_FILE, f"not inserted p_url {product['p_url']}") 
-                print(soup.select_one('#buttonsArea'))
-            elif soup.select_one('#buttonsArea > ul').text.find('구매하기') < 0:
-                write_log(LOG_FILE, f"p_url {product['p_url']}")    
-            
-            
-            continue
-            if brands.get(brand) == None:
-                cur.execute("insert into brand(m_id, b_name, b_search_keyword) values(5,%s, %s)", (brand, brand))
-                cur.execute("select * from brand where m_id = 5 order by b_id desc")
-                b_id = cur.fetchone()['b_id']
-            else:
-                b_id = brands.get(brand)
+            try:
+                soup = BeautifulSoup(driver.page_source, 'html.parser')    
+                product['p_price'] = re.sub(r'[,\s원-]', '', soup.select_one('.sentry-unmask > .price').text.strip())
+                product['p_img_url'] = ','.join([img['src'] for img in soup.select('.product-image-view .swiper-wrapper img')])
+                buy_btn = soup.select_one('#buttonsArea > ul')
 
-            cur.execute("update product set b_id = %s, p_price = %s, p_color = %s, p_last_crawling_datetime = %s where p_id = %s", (b_id, price, color, datetime.now(), product['p_id']))
+                if buy_btn.text.find('구매하기') < 0:
+                    write_log(LOG_FILE, f"p_url {product['p_url']}")
+                    product_update(cur, product, True)
+                else:
+                    product_update(cur, product, False)
+
+            except UnexpectedAlertPresentException:
+                write_log(LOG_FILE, f"selled found : p_url {product['p_url']}")
+                product_update(cur, product, True)
+
             cur.execute("update config set cfg_value = %s where cfg_key = 'reebonz_crawled_p_id'", (product['p_id']))
             conn.commit()
 

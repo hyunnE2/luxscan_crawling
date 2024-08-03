@@ -122,9 +122,11 @@ try:
             cur.execute(f"insert into brand(`m_id`, `b_name`, `b_search_keyword`) values (5, '{brand}', '{brand}')")
             cur.execute("select * from brand where m_id = 5 order by b_id desc limit 1")
             b_id = cur.fetchone()['b_id']
+
+            brands[brand] = b_id
         else:
             b_id = brands.get(brand)
-
+        
         sql = """
         INSERT INTO product (m_id, g_id, b_id, p_name_kr, p_price, p_url, p_origin_price, p_count, p_model_number, p_color, p_img_url, p_last_crawling_datetime)
         VALUES (5, %s, %s, %s, %s, %s, 0, 1, 0, '', '', NOW())

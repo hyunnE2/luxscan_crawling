@@ -60,6 +60,11 @@ def fetch_brand(cur):
     return brands
 
 
+def product_update(cur, product, is_selled):
+    cur.execute('update product set p_is_possible_crawling=%s, p_price=%s, p_img_url=%s, p_last_crawling_datetime=%s where p_id=%s', (0 if is_selled else 1, product['p_price'], product['p_img_url'], datetime.now(), product['p_id']))
+    if is_selled:
+        cur.execute('insert into product_sell_history(`p_id`, `g_id`, `psh_datetime`, `psh_price`) values(%s, %s, %s, %s)', (product['p_id'], product['g_id'], datetime.now(), product['p_price']))
+
 
 def __main__():
     try:
@@ -86,20 +91,20 @@ def __main__():
 
             soup = BeautifulSoup(response.content, 'html.parser')
             imgs = soup.select('center> table:nth-child(7) > form > tr > td > table > tr > td > div > table > tr > td:nth-child(1) > table > tr:nth-child(2) img')
-            img_urls = ','.join([img['src'] for img in imgs])
+            product['img_urls'] = ','.join([img['src'] for img in imgs])
 
             brand = re.sub(r'[,\s]', '', soup.select(".detail_info_list > .info_list_basic > dd")[0].text.strip())
             brand = brand[:brand.find('(')]
-            b_id = 0
+            product['b_id'] = 0
             if brands.get(brand) != None:
-                b_id = brands[brand]
+                product['b_id'] = brands[brand]
 
             is_sold_out = soup.select_one(".detail_info_title > .infor_price").text
             if is_sold_out.find('품절') > -1:
-                cur.execute(f"update product set b_id = {b_id}, p_img_url='{img_urls}', p_last_crawling_datetime='{datetime.now()}', p_is_possible_crawling = 0 where p_id = {product['p_id']}")
+                product_update(cur, product, True)
                 write_log(LOG_FILE, f"sold out p_id : {product['p_id']}")
             else:
-                cur.execute(f"update product set b_id = {b_id}, p_img_url='{img_urls}', p_last_crawling_datetime='{datetime.now()}' where p_id = {product['p_id']}")
+                product_update(cur, product, False)
                 write_log(LOG_FILE, f"exists p_id : {product['p_id']}")
             cur.execute("update config set cfg_value = %s where cfg_key = 'koibito_crawled_p_id'", (product['p_id']))
             conn.commit()

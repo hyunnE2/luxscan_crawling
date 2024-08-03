@@ -62,15 +62,15 @@ def init_chrome_options():
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    
     return chrome_options
 
 def __main__():
     try:
         init_log(LOG_FILE)
-
         conn = pymysql.connect(**DB_CONFIG)
         cur = conn.cursor(pymysql.cursors.DictCursor)
-        
+
         chrome_options = init_chrome_options()
         driver = webdriver.Chrome(executable_path=exe_chromedriver_path, options=chrome_options)
         driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
@@ -106,7 +106,7 @@ def __main__():
             titles = info.select('dt')
             contents = info.select('dd')
             img_urls = ','.join([i['src'] for i in soup.select('.img > .more > .thumb > li > input')])
-            
+
             brand = ""
             price = "0"
             color = ""
@@ -119,11 +119,12 @@ def __main__():
                     price = re.sub(r'[,\s원-]', '', contents[idx].text.strip())
                 if title == '컬러':
                     color = re.sub(r'[\s]', '', contents[idx].text.strip())
-            
+
             if brands.get(brand) == None:
                 cur.execute("insert into brand(m_id, b_name, b_search_keyword) values(4,%s, %s)", (brand, brand))
                 cur.execute("select * from brand where m_id = 4 order by b_id desc")
                 b_id = cur.fetchone()['b_id']
+                brands[brand] = b_id
             else:
                 b_id = brands.get(brand)
 
