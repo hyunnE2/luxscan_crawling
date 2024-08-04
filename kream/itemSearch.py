@@ -50,7 +50,7 @@ try:
     cur.execute('select b_id, b_name from brand where b_super_id is NULL')
     brands = cur.fetchall()
 
-    cur.execute('select c_id, c_name, c_is_men, c_is_woman from category')
+    cur.execute('select c_id, c_keyword, c_name, c_is_men, c_is_woman from category')
     categories = cur.fetchall()
     for brand in brands:
         cur.execute(f'select * from product where b_id = {brand["b_id"]} and m_id = 1')
@@ -67,8 +67,8 @@ try:
                 if(category['c_is_'+gender] == 0):
                     continue
                 
-                driver.get(f'https://kream.co.kr/brands/{brand["b_name"]}?gender={gender}&shop_category_id={category["c_id"]}&sort=popular_score')
-                file.write(f'bot1 get_url :  https://kream.co.kr/brands/{brand["b_name"]}?gender={gender}&shop_category_id={category["c_id"]}&sort=popular_score\n')
+                driver.get(f'https://kream.co.kr/brands/{brand["b_name"]}?gender={gender}&shop_category_id={category["c_keyword"]}&sort=popular_score')
+                file.write(f'bot1 get_url :  https://kream.co.kr/brands/{brand["b_name"]}?gender={gender}&shop_category_id={category["c_keyword"]}&sort=popular_score\n')
                 time.sleep(1)
 
                 last_height = driver.execute_script("return document.body.scrollHeight")
@@ -148,7 +148,7 @@ try:
 
                     if before_sales != tmp['sales']:
                         if tmp['sales'] == '0': continue
-                        cur.execute('insert into crawling_product_list(p_id) values(%s)',(item_id))
+                        cur.execute('INSERT IGNORE into crawling_product_list(m_id, p_id) values(1, %s)',(item_id))
 
                 conn.commit()
             file.write(f'bot1 : {brand} {category} ended : {datetime.now()}\n')
