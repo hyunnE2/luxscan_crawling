@@ -65,6 +65,10 @@ def init_chrome_options():
     
     return chrome_options
 
+def insert_log(cur, product):
+    cur.execute("update product set b_id = %s, p_is_possible_crawling = %s, p_last_crawling_datetime = %s where p_id = %s", (product['b_id'], 0, datetime.now(), product['p_id']))
+    cur.execute("insert into product_sell_history(p_id, psh_datetime, psh_price) values(%s, %s, %s)", (product['p_id'], datetime.now(), product['p_price']))
+
 def __main__():
     try:
         init_log(LOG_FILE)
@@ -93,8 +97,7 @@ def __main__():
                 alert = driver.switch_to.alert
                 alert_text = alert.text
                 if '상품이 존재하지 않습니다' in alert_text:
-                    cur.execute("update product set p_is_possible_crawling = %s, p_last_crawling_datetime = %s where p_id = %s", (0, datetime.now(), product['p_id']))
-                    cur.execute("insert into product_sell_history(p_id, psh_datetime, psh_price) values(%s, %s, %s)", (product['p_id'], datetime.now(), product['p_price']))
+                    insert_log(cur, product)
                     alert.accept()  # Alert 닫기
                     continue  # 다음 제품으로 넘어가기
             except NoAlertPresentException:
@@ -120,20 +123,26 @@ def __main__():
                 if title == '컬러':
                     color = re.sub(r'[\s]', '', contents[idx].text.strip())
 
-            if brands.get(brand) == None:
+            if brands.get(brand.replace(' ', '')) == None:
                 cur.execute("insert into brand(m_id, b_name, b_search_keyword) values(4,%s, %s)", (brand, brand))
                 cur.execute("select * from brand where m_id = 4 order by b_id desc")
-                b_id = cur.fetchone()['b_id']
-                brands[brand] = b_id
+                product['b_id'] = cur.fetchone()['b_id']
+                brands[brand.replace(' ', '')] = product['b_id']
             else:
-                b_id = brands.get(brand)
+                product['b_id'] = brands.get(brand.replace(' ', ''))
 
-            cur.execute("update product set b_id = %s, p_price = %s, p_color = %s, p_img_url = %s, p_last_crawling_datetime = %s where p_id = %s", (b_id, price, color, img_urls, datetime.now(), product['p_id']))
+            if price.find('판매완료상품') > -1:
+                insert_log(cur, product)
+            else:
+                cur.execute("update product set b_id = %s, p_price = %s, p_color = %s, p_img_url = %s, p_last_crawling_datetime = %s where p_id = %s", (product['b_id'], price, color, img_urls, datetime.now(), product['p_id']))           
             cur.execute("update config set cfg_value = %s where cfg_key = 'gugus_crawled_p_id'", (product['p_id']))
+            
+                
             conn.commit()
 
     except Exception:
         err = traceback.format_exc()
+        write_log(LOG_FILE, f"Error: {err}")
 
     finally:
         conn.close()

@@ -105,7 +105,7 @@ def __main__():
 
     except Exception:
         err = traceback.format_exc()
-        print(err)
+        write_log(LOG_FILE, f"Error: {err}")
 
     finally:
         conn.close()

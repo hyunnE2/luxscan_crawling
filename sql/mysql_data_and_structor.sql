@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS `brand`;
 CREATE TABLE `brand` (
   `b_id` INT NOT NULL AUTO_INCREMENT,
   `m_id` INT ,
+  `b_market_id` VARCHAR(255) DEFAULT NULL,
   `b_super_id` INT DEFAULT NULL,
   `b_name` VARCHAR(255) DEFAULT NULL,
   `b_search_keyword` VARCHAR(255) DEFAULT NULL,

@@ -112,7 +112,7 @@ def __main__():
 
     except Exception:
         err = traceback.format_exc()
-
+        write_log(LOG_FILE, f"Error: {err}")
     finally:
         conn.close()
         write_log(LOG_FILE, f"End at: {datetime.now()}")

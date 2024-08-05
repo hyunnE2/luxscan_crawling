@@ -4,9 +4,7 @@ from selenium.webdriver.common.by import By
 import time
 import traceback
 import pymysql
-import re
 
-import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -27,7 +25,7 @@ SAVE_PATH = os.environ.get('SAVE_PATH')+'trenbe/'
 
 exe_chromedriver_path = os.environ.get('EXECUTABLE_CHROMEDRIVER_PATH')
 
-LOG_FILE = SAVE_PATH+'usedProductGetCrawlingList.log'
+LOG_FILE = SAVE_PATH+'usedProductGetCrawlingBrandList.log'
 
 def init_log(file_path):
     with open(file_path, 'a', encoding='euc-kr') as f:
@@ -107,13 +105,14 @@ def __main__():
             brand_kr = brand.text.replace(brand_eng, '')
             
             dup_key = brand['data-log-param']
+            b_id = brands.get(brand_eng.replace(' ', ''))
             if brands.get(brand_eng.replace(' ', '')) == None:
                 cur.execute('insert into brand(`m_id`, `b_name`, `b_search_keyword`) values(2, %s, %s)', (brand_eng, brand_kr))
-                conn.commit()
+                cur.execute('select * from brand order by b_id desc limit 1')
+                b_id = cur.fetchone()['b_id']
             
-            # driver.find_element(By.XPATH, f"//div[@data-log-param='{dup_key}']")
-            # time.sleep(5)
-            # break
+            cur.execute('insert into crawling_product_list(`m_id`, `b_id`) values(2, %s)', (b_id))
+            conn.commit()
             
 
     except Exception:
