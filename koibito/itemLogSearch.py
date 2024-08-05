@@ -75,12 +75,13 @@ def __main__():
         
         brands = fetch_brand(cur)
 
-
+        print(brands)
         last_crawled_p_id = get_last_crawled_p_id(cur)
         products = fetch_products(cur, last_crawled_p_id, p_count=0)
 
         if len(products) < 1:
             cur.execute("update config set cfg_value = 0 where cfg_key = 'koibito_crawled_p_id'")
+            write_log(LOG_FILE, 'not found products')
             conn.commit()
 
         for product in products:
