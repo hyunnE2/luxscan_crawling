@@ -84,6 +84,8 @@ try:
     driver.get(url)
     time.sleep(2)
 
+    print(url)
+
     last_height = driver.execute_script("return document.body.scrollHeight")
     new_height = 0
     while True:
