@@ -82,8 +82,8 @@ try:
 
     url = f'{base_url}/events/28635'
     driver.get(url)
-    time.sleep(2)
-
+    time.sleep(4)
+    print(driver.page_source)
 
     last_height = driver.execute_script("return document.body.scrollHeight")
     new_height = 0
