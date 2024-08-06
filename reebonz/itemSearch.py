@@ -84,7 +84,6 @@ try:
     driver.get(url)
     time.sleep(2)
 
-    print(url)
 
     last_height = driver.execute_script("return document.body.scrollHeight")
     new_height = 0
@@ -97,7 +96,7 @@ try:
         try:
             btn = driver.find_element(By.CSS_SELECTOR, "button.btn.btn--more")
 
-            btn.click()
+            driver.execute_script("arguments[0].click();", btn)
             time.sleep(2)
             last_height = driver.execute_script("return document.body.scrollHeight") + 300
         except NoSuchElementException:
@@ -121,14 +120,14 @@ try:
         name = product.select_one('.product-name').text
         price = re.sub(r'[,\s원-]', '', product.select_one('.price').text.strip())
 
-        if brands.get(brand) == None:
+        if brands.get(brand.replace(' ', '')) == None:
             cur.execute(f"insert into brand(`m_id`, `b_name`, `b_search_keyword`) values (5, '{brand}', '{brand}')")
             cur.execute("select * from brand where m_id = 5 order by b_id desc limit 1")
             b_id = cur.fetchone()['b_id']
 
             brands[brand] = b_id
         else:
-            b_id = brands.get(brand)
+            b_id = brands.get(brand.replace(' ', ''))
         
         sql = """
         INSERT INTO product (m_id, g_id, b_id, p_name_kr, p_price, p_url, p_origin_price, p_count, p_model_number, p_color, p_img_url, p_last_crawling_datetime)
