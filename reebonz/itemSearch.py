@@ -101,6 +101,7 @@ try:
             time.sleep(2)
             last_height = driver.execute_script("return document.body.scrollHeight") + 300
         except NoSuchElementException:
+            write_log(LOG_FILE, 'not search more button')
             break
 
     soup = BeautifulSoup(driver.page_source, 'html.parser')
