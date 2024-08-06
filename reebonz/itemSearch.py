@@ -44,7 +44,7 @@ def fetch_brand(cur):
     tmp_brands = cur.fetchall()
     brands = {}
     for brand in tmp_brands:
-        brands[brand['b_name'].replace(' ', '')] = brand['b_id']
+        brands[brand['b_name'].replace(' ', '').upper()] = brand['b_id']
 
     return brands
     
@@ -125,17 +125,18 @@ try:
         name = product.select_one('.product-name').text
         price = re.sub(r'[,\s원-]', '', product.select_one('.price').text.strip())
 
-        if brands.get(brand.replace(' ', '')) == None:
+        upper_brand = brand.replace(' ', '').upper()
+        if brands.get(upper_brand) == None:
             cur.execute(f"insert into brand(`m_id`, `b_name`, `b_search_keyword`) values (5, '{brand}', '{brand}')")
             cur.execute("select * from brand where m_id = 5 order by b_id desc limit 1")
             b_id = cur.fetchone()['b_id']
 
-            brands[brand.replace(' ', '')] = b_id
+            brands[upper_brand] = b_id
         else:
-            b_id = brands.get(brand.replace(' ', ''))
+            b_id = brands.get(upper_brand)
         
         sql = """
-        INSERT INTO product (m_id, g_id, b_id, p_name_kr, p_price, p_url, p_origin_price, p_count, p_model_number, p_color, p_img_url, p_last_crawling_datetime)
+        INSERT INTO used_product (m_id, g_id, b_id, p_name_kr, p_price, p_url, p_origin_price, p_count, p_model_number, p_color, p_img_url, p_last_crawling_datetime)
         VALUES (5, %s, %s, %s, %s, %s, 0, 1, 0, '', '', NOW())
         ON DUPLICATE KEY UPDATE p_last_crawling_datetime = NOW();
         """

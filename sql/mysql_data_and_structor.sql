@@ -89,6 +89,31 @@ CREATE TABLE `product` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
+DROP TABLE IF EXISTS `used_product`;
+CREATE TABLE `used_product` (
+  `p_id` INT NOT NULL AUTO_INCREMENT,
+  `m_id` INT DEFAULT NULL,
+  `c_id` INT DEFAULT NULL,
+  `b_id` INT DEFAULT NULL,
+  `g_id` INT DEFAULT NULL,
+  `p_name` VARCHAR(255) DEFAULT NULL,
+  `p_name_kr` VARCHAR(255) DEFAULT NULL,
+  `p_price` decimal(10,0),
+  `p_origin_price` decimal(10,0),
+  `p_count` int DEFAULT '0',
+  `p_option` TEXT,
+  `p_model_number` VARCHAR(255),
+  `p_color` VARCHAR(255) DEFAULT NULL,
+  `p_url` VARCHAR(255) DEFAULT NULL,
+  `p_img_url` TEXT DEFAULT NULL,
+  `p_last_crawling_datetime` datetime DEFAULT CURRENT_TIMESTAMP,
+  `p_is_possible_crawling` TINYINT DEFAULT 1,
+  PRIMARY KEY (`p_id`),
+  UNIQUE KEY `p_url_unique` (`p_url`),
+  KEY `p_url` (`p_url`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
 DROP TABLE IF EXISTS `crawling_product_list`;
 CREATE TABLE `crawling_product_list` (
   `cpl_id` INT NOT NULL AUTO_INCREMENT,
@@ -114,6 +139,19 @@ CREATE TABLE `product_sell_history` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
+DROP TABLE IF EXISTS `used_product_sell_history`;
+CREATE TABLE `used_product_sell_history` (
+  `psh_id` int NOT NULL AUTO_INCREMENT,
+  `g_id` INT,
+  `p_id` int DEFAULT NULL,
+  `psh_option` varchar(255) DEFAULT NULL,
+  `psh_datetime` datetime DEFAULT NULL,
+  `psh_price` int DEFAULT NULL,
+  `psh_is_quickly` tinyint DEFAULT NULL,
+  PRIMARY KEY (`psh_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
 DROP TABLE IF EXISTS `price_by_option_of_product`;
 CREATE TABLE `price_by_option_of_product` (
 	`pboop_id` INT NOT NULL AUTO_INCREMENT,
@@ -126,16 +164,3 @@ CREATE TABLE `price_by_option_of_product` (
   UNIQUE KEY `pboop_unique_key` (`p_id`,`pboop_option`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-
-DROP TABLE IF EXISTS `price_of_used_product`;
-CREATE TABLE `price_of_used_product` (
-	`poup_id` INT NOT NULL AUTO_INCREMENT,
-  `b_id` INT NOT NULL,
-  `poup_name` VARCHAR(255),
-	`poup_price` INT DEFAULT NULL,
-  `poup_sell_price` INT DEFAULT NULL,
-	`poup_max_price` INT DEFAULT NULL,
-  `poup_max_sell_price` INT DEFAULT NULL,
-	`poup_datetime` DATETIME DEFAULT CURRENT_TIMESTAMP,
-	PRIMARY KEY (`poup_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

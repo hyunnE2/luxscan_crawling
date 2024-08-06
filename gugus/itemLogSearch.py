@@ -42,8 +42,8 @@ def get_last_crawled_p_id(cur):
     return int(result['cfg_value'])
 
 # Fetch products to crawl
-def fetch_products(cur, last_crawled_p_id, p_count=80, limit=400):
-    cur.execute(f"SELECT * FROM product WHERE m_id = 4 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
+def fetch_used_products(cur, last_crawled_p_id, p_count=80, limit=400):
+    cur.execute(f"SELECT * FROM used_product WHERE m_id = 4 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
     return cur.fetchall()
 
 def fetch_brand(cur):
@@ -51,7 +51,7 @@ def fetch_brand(cur):
     tmp_brands = cur.fetchall()
     brands = {}
     for brand in tmp_brands:
-        brands[brand['b_name'].replace(' ', '')] = brand['b_id']
+        brands[brand['b_name'].replace(' ', '').upper()] = brand['b_id']
     return brands
 
 def init_chrome_options():
@@ -66,8 +66,8 @@ def init_chrome_options():
     return chrome_options
 
 def insert_log(cur, product):
-    cur.execute("update product set b_id = %s, p_is_possible_crawling = %s, p_last_crawling_datetime = %s where p_id = %s", (product['b_id'], 0, datetime.now(), product['p_id']))
-    cur.execute("insert into product_sell_history(p_id, psh_datetime, psh_price) values(%s, %s, %s)", (product['p_id'], datetime.now(), product['p_price']))
+    cur.execute("update used_product set b_id = %s, p_is_possible_crawling = %s, p_last_crawling_datetime = %s where p_id = %s", (product['b_id'], 0, datetime.now(), product['p_id']))
+    cur.execute("insert into used_product_sell_history(p_id, psh_datetime, psh_price) values(%s, %s, %s)", (product['p_id'], datetime.now(), product['p_price']))
 
 def __main__():
     try:
@@ -83,13 +83,13 @@ def __main__():
         brands = fetch_brand(cur)
 
         last_crawled_p_id = get_last_crawled_p_id(cur)
-        products = fetch_products(cur, last_crawled_p_id, p_count=0)
+        used_products = fetch_used_products(cur, last_crawled_p_id, p_count=0)
 
-        if len(products) < 1:
+        if len(used_products) < 1:
             cur.execute("update config set cfg_value = 0 where cfg_key = 'gugus_crawled_p_id'")
             conn.commit()
 
-        for product in products:
+        for product in used_products:
             driver.get(product['p_url'])
             time.sleep(2)
 
@@ -122,19 +122,20 @@ def __main__():
                     price = re.sub(r'[,\s원-]', '', contents[idx].text.strip())
                 if title == '컬러':
                     color = re.sub(r'[\s]', '', contents[idx].text.strip())
-
-            if brands.get(brand.replace(' ', '')) == None:
+                    
+            upper_brand = brand.replace(' ', '').upper()
+            if brands.get(upper_brand) == None:
                 cur.execute("insert into brand(m_id, b_name, b_search_keyword) values(4,%s, %s)", (brand, brand))
                 cur.execute("select * from brand where m_id = 4 order by b_id desc")
                 product['b_id'] = cur.fetchone()['b_id']
-                brands[brand.replace(' ', '')] = product['b_id']
+                brands[upper_brand] = product['b_id']
             else:
-                product['b_id'] = brands.get(brand.replace(' ', ''))
+                product['b_id'] = brands.get(upper_brand)
 
             if price.find('판매완료상품') > -1:
                 insert_log(cur, product)
             else:
-                cur.execute("update product set b_id = %s, p_price = %s, p_color = %s, p_img_url = %s, p_last_crawling_datetime = %s where p_id = %s", (product['b_id'], price, color, img_urls, datetime.now(), product['p_id']))           
+                cur.execute("update used_product set b_id = %s, p_price = %s, p_color = %s, p_img_url = %s, p_last_crawling_datetime = %s where p_id = %s", (product['b_id'], price, color, img_urls, datetime.now(), product['p_id']))           
             cur.execute("update config set cfg_value = %s where cfg_key = 'gugus_crawled_p_id'", (product['p_id']))
             
                 

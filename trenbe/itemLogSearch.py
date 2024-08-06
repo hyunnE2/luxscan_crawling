@@ -48,6 +48,7 @@ def init_chrome_options():
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
     return chrome_options
 
+
 def get_last_crawled_p_id(cur):
     cur.execute("SELECT * FROM config WHERE cfg_key = 'trenbe_crawled_p_id'")
     result = cur.fetchone()
@@ -56,11 +57,11 @@ def get_last_crawled_p_id(cur):
         return 0
     return int(result['cfg_value'])
 
-# Fetch products to crawl
-def fetch_products(cur, last_crawled_p_id, p_count=80, limit=400):
-    cur.execute(f"SELECT * FROM product WHERE m_id = 2 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} AND p_is_possible_crawling = 1 LIMIT {limit}")
-    return cur.fetchall()
 
+# Fetch products to crawl
+def fetch_used_products(cur, last_crawled_p_id, p_count=80, limit=400):
+    cur.execute(f"SELECT * FROM used_product WHERE m_id = 2 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} AND p_is_possible_crawling = 1 LIMIT {limit}")
+    return cur.fetchall()
 
 
 def __main__():
@@ -85,7 +86,7 @@ def __main__():
         
 
         last_crawled_p_id = get_last_crawled_p_id(cur)
-        products = fetch_products(cur, last_crawled_p_id, p_count=0)
+        products = fetch_used_products(cur, last_crawled_p_id, p_count=0)
 
         if len(products) < 1:
             cur.execute("update config set cfg_value = 0 where cfg_key = 'trenbe_crawled_p_id'")
@@ -101,12 +102,12 @@ def __main__():
                 price=0
             if source.select_one('.ProductOptions__ButtonGroupWrap-pq9f9q-1 > button').text.find('품절') > -1:
                 write_log(LOG_FILE, f'sold out p_id : {product["p_id"]}')
-                cur.execute(f'update product set p_is_possible_crawling = 0 where p_id = {product["p_id"]}')
-                cur.execute('insert into product_sell_history(p_id, g_id, psh_datetime, psh_price, psh_is_quickly) values(%s, %s, %s, %s, 0)', (product['p_id'], grades[product['p_option']], datetime.now(), product['p_price']))
+                cur.execute(f'update used_product set p_is_possible_crawling = 0 where p_id = {product["p_id"]}')
+                cur.execute('insert into used_product_sell_history(p_id, g_id, psh_datetime, psh_price, psh_is_quickly) values(%s, %s, %s, %s, 0)', (product['p_id'], grades[product['p_option']], datetime.now(), product['p_price']))
             else:
                 if int(price) != product['p_price']:
                     write_log(LOG_FILE, f'update p_id : {product["p_id"]}')
-                    cur.execute('update product set p_price = %s and p_last_crawling_datetime = %s, p_img_url where p_id = %s', (price, datetime.now(), product['p_id']))
+                    cur.execute('update used_product set p_price = %s and p_last_crawling_datetime = %s, p_img_url where p_id = %s', (price, datetime.now(), product['p_id']))
             cur.execute("update config set cfg_value = %s where cfg_key = 'trenbe_crawled_p_id'", (product['p_id']))
             conn.commit()
 

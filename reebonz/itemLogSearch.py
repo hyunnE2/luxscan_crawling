@@ -44,8 +44,8 @@ def get_last_crawled_p_id(cur):
     return int(result['cfg_value'])
 
 # Fetch products to crawl
-def fetch_products(cur, last_crawled_p_id, p_count=80, limit=400):
-    cur.execute(f"SELECT * FROM product WHERE m_id = 5 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
+def fetch_used_products(cur, last_crawled_p_id, p_count=80, limit=400):
+    cur.execute(f"SELECT * FROM used_product WHERE m_id = 5 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
     return cur.fetchall()
 
 def init_chrome_options(ua):
@@ -58,10 +58,10 @@ def init_chrome_options(ua):
     chrome_options.add_argument(f"user-agent={ua}")
     return chrome_options
 
-def product_update(cur, product, is_selled):
-    cur.execute('update product set p_is_possible_crawling=%s, p_price=%s, p_img_url=%s, p_last_crawling_datetime=%s where p_id=%s', (0 if is_selled else 1, product['p_price'], product['p_img_url'], datetime.now(), product['p_id']))
+def update_used_product(cur, product, is_selled):
+    cur.execute('update used_product set p_is_possible_crawling=%s, p_price=%s, p_img_url=%s, p_last_crawling_datetime=%s where p_id=%s', (0 if is_selled else 1, product['p_price'], product['p_img_url'], datetime.now(), product['p_id']))
     if is_selled:
-        cur.execute('insert into product_sell_history(`p_id`, `g_id`, `psh_datetime`, `psh_price`) values(%s, %s, %s, %s)', (product['p_id'], product['g_id'], datetime.now(), product['p_price']))
+        cur.execute('insert into used_product_sell_history(`p_id`, `g_id`, `psh_datetime`, `psh_price`) values(%s, %s, %s, %s)', (product['p_id'], product['g_id'], datetime.now(), product['p_price']))
 
 def __main__():
     try:
@@ -81,7 +81,7 @@ def __main__():
 
 
         last_crawled_p_id = get_last_crawled_p_id(cur)
-        products = fetch_products(cur, last_crawled_p_id, p_count=0)
+        products = fetch_used_products(cur, last_crawled_p_id, p_count=0)
 
         if len(products) < 1:
             cur.execute("update config set cfg_value = 0 where cfg_key = 'reebonz_crawled_p_id'")
@@ -98,13 +98,13 @@ def __main__():
 
                 if buy_btn.text.find('구매하기') < 0:
                     write_log(LOG_FILE, f"p_url {product['p_url']}")
-                    product_update(cur, product, True)
+                    update_used_product(cur, product, True)
                 else:
-                    product_update(cur, product, False)
+                    update_used_product(cur, product, False)
 
             except UnexpectedAlertPresentException:
                 write_log(LOG_FILE, f"selled found : p_url {product['p_url']}")
-                product_update(cur, product, True)
+                update_used_product(cur, product, True)
 
             cur.execute("update config set cfg_value = %s where cfg_key = 'reebonz_crawled_p_id'", (product['p_id']))
             conn.commit()

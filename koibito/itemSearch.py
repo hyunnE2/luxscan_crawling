@@ -76,10 +76,10 @@ try:
 
             if price.find('거래진행중') > -1:
                 price = -1
-                write_log(LOG_FILE, f"inserst product")
+                write_log(LOG_FILE, f"inserst used_product")
 
             sql = """
-            INSERT INTO product (m_id, g_id, p_name_kr, p_price, p_url, p_origin_price, p_count, p_model_number, p_color, p_img_url, p_last_crawling_datetime)
+            INSERT INTO used_product (m_id, g_id, p_name_kr, p_price, p_url, p_origin_price, p_count, p_model_number, p_color, p_img_url, p_last_crawling_datetime)
             VALUES (3, %s, %s, %s, %s, 0, 1, 0, '', '', NOW())
             ON DUPLICATE KEY UPDATE p_last_crawling_datetime = NOW();
             """

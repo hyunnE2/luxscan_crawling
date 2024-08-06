@@ -45,8 +45,8 @@ def get_last_crawled_p_id(cur):
     return int(result['cfg_value'])
 
 # Fetch products to crawl
-def fetch_products(cur, last_crawled_p_id, p_count=80, limit=400):
-    cur.execute(f"SELECT * FROM product WHERE m_id = 3 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
+def fetch_used_products(cur, last_crawled_p_id, p_count=80, limit=400):
+    cur.execute(f"SELECT * FROM used_product WHERE m_id = 3 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
     return cur.fetchall()
 
 
@@ -56,14 +56,14 @@ def fetch_brand(cur):
     
     brands = {}
     for brand in tmp_brands:
-        brands[brand['b_name'].replace(' ', '')] = brand['b_id']
+        brands[brand['b_name'].replace(' ', '').upper()] = brand['b_id']
     return brands
 
 
-def product_update(cur, product, is_selled):
-    cur.execute('update product set p_is_possible_crawling=%s, p_price=%s, p_img_url=%s, p_last_crawling_datetime=%s where p_id=%s', (0 if is_selled else 1, product['p_price'], product['p_img_url'], datetime.now(), product['p_id']))
+def update_used_product(cur, product, is_selled):
+    cur.execute('update used_product set b_id=%s, p_is_possible_crawling=%s, p_price=%s, p_img_url=%s, p_last_crawling_datetime=%s where p_id=%s', (product['b_id'], 0 if is_selled else 1, product['p_price'], product['p_img_url'], datetime.now(), product['p_id']))
     if is_selled:
-        cur.execute('insert into product_sell_history(`p_id`, `g_id`, `psh_datetime`, `psh_price`) values(%s, %s, %s, %s)', (product['p_id'], product['g_id'], datetime.now(), product['p_price']))
+        cur.execute('insert into used_product_sell_history(`p_id`, `g_id`, `psh_datetime`, `psh_price`) values(%s, %s, %s, %s)', (product['p_id'], product['g_id'], datetime.now(), product['p_price']))
 
 
 def __main__():
@@ -76,7 +76,7 @@ def __main__():
         brands = fetch_brand(cur)
 
         last_crawled_p_id = get_last_crawled_p_id(cur)
-        products = fetch_products(cur, last_crawled_p_id, p_count=0)
+        products = fetch_used_products(cur, last_crawled_p_id, p_count=0)
 
         if len(products) < 1:
             cur.execute("update config set cfg_value = 0 where cfg_key = 'koibito_crawled_p_id'")
@@ -93,18 +93,26 @@ def __main__():
             imgs = soup.select('center> table:nth-child(7) > form > tr > td > table > tr > td > div > table > tr > td:nth-child(1) > table > tr:nth-child(2) img')
             product['img_urls'] = ','.join([img['src'] for img in imgs])
 
-            brand = re.sub(r'[,\s]', '', soup.select(".detail_info_list > .info_list_basic > dd")[0].text.strip())
+            brand = soup.select(".detail_info_list > .info_list_basic > dd")[0].text.strip()
             brand = brand[:brand.find('(')]
-            product['b_id'] = 0
-            if brands.get(brand) != None:
-                product['b_id'] = brands[brand]
+            upper_brand = brand.replace(' ', '').upper()
+            
+            if brands.get(upper_brand) == None:
+                cur.execute(f"insert into brand(`m_id`, `b_name`, `b_search_keyword`) values (3, '{brand}', '{brand}')")
+                cur.execute("select * from brand where m_id = 3 order by b_id desc limit 1")
+                b_id = cur.fetchone()['b_id']
+
+                brands[upper_brand] = b_id
+                product['b_id'] = b_id
+            else:
+                product['b_id'] = brands[upper_brand]
 
             is_sold_out = soup.select_one(".detail_info_title > .info_price").text
             if is_sold_out.find('품절') > -1:
-                product_update(cur, product, True)
+                update_used_product(cur, product, True)
                 write_log(LOG_FILE, f"sold out p_id : {product['p_id']}")
             else:
-                product_update(cur, product, False)
+                update_used_product(cur, product, False)
                 write_log(LOG_FILE, f"exists p_id : {product['p_id']}")
             cur.execute("update config set cfg_value = %s where cfg_key = 'koibito_crawled_p_id'", (product['p_id']))
             conn.commit()
