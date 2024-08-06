@@ -35,6 +35,15 @@ def write_log(file_path, message):
     with open(file_path, 'a', encoding='euc-kr') as f:
         f.write(message + '\n')
 
+def fetch_brand(cur):
+    cur.execute('select * from brand where m_id = 5')
+    tmp_brands = cur.fetchall()
+    brands = {}
+    for brand in tmp_brands:
+        brands[brand['b_name'].replace(' ', '')] = brand['b_id']
+
+    return brands
+
 def init_chrome_options():
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--headless=new")
@@ -53,6 +62,9 @@ try:
     conn = pymysql.connect(**DB_CONFIG)
     cur = conn.cursor(pymysql.cursors.DictCursor)
     init_log(LOG_FILE)
+
+    brands = fetch_brand(cur)
+
     for i in range(1, 101):  # Starting range from 1 to 100
         url = f'https://www.trenbe.com/Owned?sort=latest&brandType=0&options=owned&page={i}'
 
@@ -96,17 +108,16 @@ try:
                     elif idx == 2:
                         tmp_product['price'] = re.sub(r'[,\s원-]', '', info.text[info.text.find('%')+1:].strip())
                 
-                cur.execute(f"select * from brand where b_name = '{tmp_product['brand']}'")
-                brand = cur.fetchone()
-                if brand == None:
-                    cur.execute(f"insert into brand(`m_id`, `b_name`, `b_name`) values (2, '{tmp_product['brand']}', '{tmp_product['brand']}')")
-                    cur.execute("select * from brand order by b_id desc limit 1")
-                    brand = cur.fetchone()
-                else:
-                    if brand['b_super_id'] != None:
-                        tmp_product['brand'] = brand['b_super_id']
+                if brands.get(brands[tmp_product['brand'].replace(' ', '')]) == None:
+                    cur.execute(f"insert into brand(`m_id`, `b_name`, `b_search_keyword`) values (5, '{tmp_product['brand']}', '{tmp_product['brand']}')")
+                    cur.execute("select * from brand where m_id = 5 order by b_id desc limit 1")
+                    b_id = cur.fetchone()['b_id']
 
-                tmp_product['brand'] = brand['b_id']
+                    brands[tmp_product['brand'].replace(' ', '')] = b_id
+                else:
+                    b_id = brands.get(tmp_product['brand'].replace(' ', ''))
+
+                tmp_product['brand'] = b_id
                 # Insert data into the product table
                 sql = """
                 INSERT INTO product (m_id, b_id, p_name_kr, p_price, p_url, p_origin_price, p_count, p_option, p_model_number, p_color, p_img_url, p_last_crawling_datetime)

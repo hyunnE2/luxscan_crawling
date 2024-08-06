@@ -130,7 +130,7 @@ try:
             cur.execute("select * from brand where m_id = 5 order by b_id desc limit 1")
             b_id = cur.fetchone()['b_id']
 
-            brands[brand] = b_id
+            brands[brand.replace(' ', '')] = b_id
         else:
             b_id = brands.get(brand.replace(' ', ''))
         
