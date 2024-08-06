@@ -9,6 +9,8 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 
+from fake_useragent import UserAgent
+
 load_dotenv()
 
 DB_CONFIG = {
@@ -46,14 +48,14 @@ def fetch_products(cur, last_crawled_p_id, p_count=80, limit=400):
     cur.execute(f"SELECT * FROM product WHERE m_id = 5 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
     return cur.fetchall()
 
-def init_chrome_options():
+def init_chrome_options(ua):
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--window-size=1920,960")
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    chrome_options.add_argument(f"user-agent={ua}")
     return chrome_options
 
 def product_update(cur, product, is_selled):
@@ -63,6 +65,10 @@ def product_update(cur, product, is_selled):
 
 def __main__():
     try:
+        ua = UserAgent()
+        ua.browsers.remove('chrome')
+        ua = ua.random
+
         init_log(LOG_FILE)
 
         conn = pymysql.connect(**DB_CONFIG)
@@ -70,7 +76,7 @@ def __main__():
         
         chrome_options = init_chrome_options()
         driver = webdriver.Chrome(executable_path=exe_chromedriver_path, options=chrome_options)
-        driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
+        driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": ua})
         driver.execute_cdp_cmd('Network.enable', {})
 
 
