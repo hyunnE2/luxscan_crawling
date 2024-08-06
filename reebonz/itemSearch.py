@@ -10,6 +10,8 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 
+from fake_useragent import UserAgent
+
 load_dotenv()
 
 base_url = os.environ.get('REEBONZ_URL')
@@ -56,18 +58,22 @@ def fetch_grade(cur):
 
     return grades
 
-def init_chrome_options():
+def init_chrome_options(ua):
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    chrome_options.add_argument(f"user-agent={ua}")
     return chrome_options
 
 
 try:
+    ua = UserAgent()
+    ua.browsers.remove('chrome')
+    ua = ua.random
+    
     conn = pymysql.connect(**DB_CONFIG)
     cur = conn.cursor(pymysql.cursors.DictCursor)
     init_log(LOG_FILE)
@@ -75,9 +81,9 @@ try:
     brands = fetch_brand(cur)
     grades = fetch_grade(cur)
 
-    chrome_options = init_chrome_options()
+    chrome_options = init_chrome_options(ua)
     driver = webdriver.Chrome(executable_path=exe_chromedriver_path, options=chrome_options)
-    driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
+    driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": ua})
     driver.execute_cdp_cmd('Network.enable', {})
 
     url = f'{base_url}/events/28635'
