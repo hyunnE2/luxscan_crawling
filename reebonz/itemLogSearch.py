@@ -74,7 +74,7 @@ def __main__():
         conn = pymysql.connect(**DB_CONFIG)
         cur = conn.cursor(pymysql.cursors.DictCursor)
         
-        chrome_options = init_chrome_options()
+        chrome_options = init_chrome_options(ua)
         driver = webdriver.Chrome(executable_path=exe_chromedriver_path, options=chrome_options)
         driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": ua})
         driver.execute_cdp_cmd('Network.enable', {})
