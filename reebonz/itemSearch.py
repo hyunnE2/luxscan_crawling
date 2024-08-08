@@ -102,7 +102,7 @@ try:
             btn = driver.find_element(By.CSS_SELECTOR, "button.btn.btn--more")
 
             driver.execute_script("arguments[0].click();", btn)
-            time.sleep(2)
+            time.sleep(3)
             last_height = driver.execute_script("return document.body.scrollHeight") + 300
         except NoSuchElementException:
             write_log(LOG_FILE, 'not search more button')
