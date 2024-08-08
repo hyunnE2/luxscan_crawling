@@ -1,6 +1,8 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
+from urllib.parse import urlparse, parse_qs
+
 import time
 import traceback
 import pymysql
@@ -56,12 +58,19 @@ def fetch_grade(cur):
 
 
 def fetch_crawling_brand(cur):
-    cur.execute('select * from crawling_product_list where m_id = 2 limit 1')
-    return cur.fetchone()
+    cur.execute('select * from crawling_product_list join brand on crawling_product_list.b_id = brand.b_id where brand.m_id = 2')
+    return cur.fetchall()
+
+def url_parser(url, params_name):
+    parsed_url = urlparse(url)
+    query_params = parse_qs(parsed_url.query)
+
+    # brandId 추출
+    return query_params.get(params_name, [None])[0]
 
 def init_chrome_options():
     chrome_options = webdriver.ChromeOptions()
-    # chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -89,8 +98,18 @@ def __main__():
         driver.get('https://www.trenbe.com/resale/product-registration/brand?stepName=BRAND')
         time.sleep(2)
 
-        scrollItem = driver.find_element(By.CSS_SELECTOR, '.StepItemList__StepItemListWrap-sc-4a1pi5-0')
+        driver.find_element(By.CSS_SELECTOR, '.input-wrap > input').send_keys(crawling_brand['b_search_keyword'])
+        time.sleep(2)
+        driver.find_element(By.CSS_SELECTOR, '.StepItemList__ListContainer-sc-4a1pi5-1').click()
 
+        time.sleep(4)
+
+        b_market_id = url_parser(driver.current_url, 'brandId')
+        cur.execute('update brand set b_market_id = %s where b_id = %s', (b_market_id, crawling_brand['b_id']))
+        conn.commit()
+
+        scrollItem = driver.find_element(By.CSS_SELECTOR, '.StepItemList__StepItemListWrap-sc-4a1pi5-0')
+        driver.execute_script('window.scrollTo(0, 600);')
         tmp = -1
         scrollY = 0
         while tmp != scrollY:
@@ -102,11 +121,19 @@ def __main__():
             scrollY += 20000
             scrollY = driver.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
 
+        time.sleep(2)
+
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         product_list = soup.select('.StepItemList__ListContainer-sc-4a1pi5-1 > div')
         
-            
-            
+        for product in product_list:
+            d_product = product.select_one('.ListModelItem__ContentBox-sc-1jm7w42-3')
+            if d_product.select_one('.market-measurement-badge') == None: continue
+            p_name = product.select_one('p').text
+
+            cur.execute('insert ignore into product_resale(`b_id`, `m_id`, `pr_name`) values(%s, 2, %s)', (crawling_brand['b_id'], p_name))
+            conn.commit()
+        conn.commit()
 
     except Exception:
         err = traceback.format_exc()

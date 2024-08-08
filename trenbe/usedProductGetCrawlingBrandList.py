@@ -85,7 +85,7 @@ def __main__():
         time.sleep(2)
 
         scrollItem = driver.find_element(By.CSS_SELECTOR, '.StepItemList__StepItemListWrap-sc-4a1pi5-0')
-
+        driver.execute_script('window.scrollTo(0, 600);')
         tmp = -1
         scrollY = 0
         while tmp != scrollY:
@@ -97,6 +97,8 @@ def __main__():
             scrollY += 20000
             scrollY = driver.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
 
+        time.sleep(2)
+
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         brand_list = soup.select('.StepItemList__ListContainer-sc-4a1pi5-1 > div')
         
@@ -104,14 +106,13 @@ def __main__():
             brand_eng =  brand.select_one('span').text
             brand_kr = brand.text.replace(brand_eng, '')
             
-            dup_key = brand['data-log-param']
             b_id = brands.get(brand_eng.replace(' ', ''))
             if brands.get(brand_eng.replace(' ', '')) == None:
                 cur.execute('insert into brand(`m_id`, `b_name`, `b_search_keyword`) values(2, %s, %s)', (brand_eng, brand_kr))
                 cur.execute('select * from brand order by b_id desc limit 1')
                 b_id = cur.fetchone()['b_id']
             
-            cur.execute('insert into crawling_product_list(`m_id`, `b_id`) values(2, %s)', (b_id))
+            cur.execute('insert ignore into crawling_product_list(`m_id`, `b_id`) values(2, %s)', (b_id))
             conn.commit()
             
 

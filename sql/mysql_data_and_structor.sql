@@ -164,3 +164,20 @@ CREATE TABLE `price_by_option_of_product` (
   UNIQUE KEY `pboop_unique_key` (`p_id`,`pboop_option`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+
+
+DROP TABLE IF EXISTS `product_resale`;
+CREATE TABLE `product_resale` (
+  `pr_id` INT PRIMARY KEY AUTO_INCREMENT not null,
+  `b_id` INT DEFAULT NULL,
+  `m_id` INT DEFAULT NULL,
+  `pr_name` VARCHAR(255) DEFAULT NULL,
+  `pr_category` VARCHAR(255) DEFAULT NULL,
+  `pr_avg_sale` decimal(10,0),
+  `pr_avg_buy` decimal(10,0),
+  `pr_max_sale` decimal(10,0),
+  `pr_max_buy` decimal(10,0),
+  `pr_create_datetime` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `pr_update_datetime` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY `product_resale_unique_key` (`b_id`, `m_id`, `pr_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
