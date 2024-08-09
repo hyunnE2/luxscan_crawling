@@ -106,6 +106,7 @@ def __main__():
             time.sleep(4)
 
             b_market_id = url_parser(driver.current_url, 'brandId')
+            print(b_market_id)
             cur.execute('update brand set b_market_id = %s where b_id = %s', (b_market_id, b_search_keyword['b_id']))
             conn.commit()
 
