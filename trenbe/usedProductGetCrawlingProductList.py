@@ -1,5 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
 
 from urllib.parse import urlparse, parse_qs
 
@@ -58,7 +59,7 @@ def fetch_grade(cur):
 
 
 def fetch_crawling_brand(cur):
-    cur.execute('select * from crawling_product_list join brand on crawling_product_list.b_id = brand.b_id where brand.m_id = 2')
+    cur.execute('select * from crawling_product_list join brand on crawling_product_list.b_id = brand.b_id where brand.m_id = 2 ORDER BY cpl_id ')
     return cur.fetchall()
 
 def url_parser(url, params_name):
@@ -106,16 +107,17 @@ def __main__():
             time.sleep(4)
 
             b_market_id = url_parser(driver.current_url, 'brandId')
-            print(driver.current_url)
             cur.execute('update brand set b_market_id = %s where b_id = %s', (b_market_id, b_search_keyword['b_id']))
             conn.commit()
-
-            scrollItem = driver.find_element(By.CSS_SELECTOR, '.StepItemList__StepItemListWrap-sc-4a1pi5-0')
-            driver.execute_script('window.scrollTo(0, 600);')
+            try:
+                scrollItem = driver.find_element(By.CSS_SELECTOR, '.StepItemList__StepItemListWrap-sc-4a1pi5-0')
+                driver.execute_script('window.scrollTo(0, 600);')
+            except NoSuchElementException:
+                write_log(LOG_FILE, 'not search more button')
+                continue
+            
             tmp = -1
             scrollY = 0
-            print(driver.page_source)
-            print('scroll Start')
             while tmp != scrollY:
                 scrollY += 20000
                 tmp = driver.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
@@ -124,7 +126,6 @@ def __main__():
 
                 scrollY += 20000
                 scrollY = driver.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
-            print('scroll end')
             time.sleep(2)
 
             soup = BeautifulSoup(driver.page_source, 'html.parser')
