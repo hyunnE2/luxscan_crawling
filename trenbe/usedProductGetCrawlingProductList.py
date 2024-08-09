@@ -106,6 +106,7 @@ def __main__():
             time.sleep(4)
 
             b_market_id = url_parser(driver.current_url, 'brandId')
+            print(driver.current_url)
             cur.execute('update brand set b_market_id = %s where b_id = %s', (b_market_id, b_search_keyword['b_id']))
             conn.commit()
 
@@ -113,6 +114,8 @@ def __main__():
             driver.execute_script('window.scrollTo(0, 600);')
             tmp = -1
             scrollY = 0
+            print(driver.page_source)
+            print('scroll Start')
             while tmp != scrollY:
                 scrollY += 20000
                 tmp = driver.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
@@ -121,7 +124,7 @@ def __main__():
 
                 scrollY += 20000
                 scrollY = driver.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
-
+            print('scroll end')
             time.sleep(2)
 
             soup = BeautifulSoup(driver.page_source, 'html.parser')
