@@ -95,45 +95,46 @@ def __main__():
         driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
         driver.execute_cdp_cmd('Network.enable', {})
 
-        driver.get('https://www.trenbe.com/resale/product-registration/brand?stepName=BRAND')
-        time.sleep(2)
+        for b_search_keyword in crawling_brand:
+            driver.get('https://www.trenbe.com/resale/product-registration/brand?stepName=BRAND')
+            time.sleep(2)
 
-        driver.find_element(By.CSS_SELECTOR, '.input-wrap > input').send_keys(crawling_brand['b_search_keyword'])
-        time.sleep(2)
-        driver.find_element(By.CSS_SELECTOR, '.StepItemList__ListContainer-sc-4a1pi5-1').click()
+            driver.find_element(By.CSS_SELECTOR, '.input-wrap > input').send_keys(b_search_keyword['b_search_keyword'])
+            time.sleep(2)
+            driver.find_element(By.CSS_SELECTOR, '.StepItemList__ListContainer-sc-4a1pi5-1').click()
 
-        time.sleep(4)
-
-        b_market_id = url_parser(driver.current_url, 'brandId')
-        cur.execute('update brand set b_market_id = %s where b_id = %s', (b_market_id, crawling_brand['b_id']))
-        conn.commit()
-
-        scrollItem = driver.find_element(By.CSS_SELECTOR, '.StepItemList__StepItemListWrap-sc-4a1pi5-0')
-        driver.execute_script('window.scrollTo(0, 600);')
-        tmp = -1
-        scrollY = 0
-        while tmp != scrollY:
-            scrollY += 20000
-            tmp = driver.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
-            
             time.sleep(4)
 
-            scrollY += 20000
-            scrollY = driver.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
-
-        time.sleep(2)
-
-        soup = BeautifulSoup(driver.page_source, 'html.parser')
-        product_list = soup.select('.StepItemList__ListContainer-sc-4a1pi5-1 > div')
-        
-        for product in product_list:
-            d_product = product.select_one('.ListModelItem__ContentBox-sc-1jm7w42-3')
-            if d_product.select_one('.market-measurement-badge') == None: continue
-            p_name = product.select_one('p').text
-
-            cur.execute('insert ignore into product_resale(`b_id`, `m_id`, `pr_name`) values(%s, 2, %s)', (crawling_brand['b_id'], p_name))
+            b_market_id = url_parser(driver.current_url, 'brandId')
+            cur.execute('update brand set b_market_id = %s where b_id = %s', (b_market_id, b_search_keyword['b_id']))
             conn.commit()
-        conn.commit()
+
+            scrollItem = driver.find_element(By.CSS_SELECTOR, '.StepItemList__StepItemListWrap-sc-4a1pi5-0')
+            driver.execute_script('window.scrollTo(0, 600);')
+            tmp = -1
+            scrollY = 0
+            while tmp != scrollY:
+                scrollY += 20000
+                tmp = driver.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
+                
+                time.sleep(4)
+
+                scrollY += 20000
+                scrollY = driver.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
+
+            time.sleep(2)
+
+            soup = BeautifulSoup(driver.page_source, 'html.parser')
+            product_list = soup.select('.StepItemList__ListContainer-sc-4a1pi5-1 > div')
+            
+            for product in product_list:
+                d_product = product.select_one('.ListModelItem__ContentBox-sc-1jm7w42-3')
+                if d_product.select_one('.market-measurement-badge') == None: continue
+                p_name = product.select_one('p').text
+
+                cur.execute('insert ignore into product_resale(`b_id`, `m_id`, `pr_name`) values(%s, 2, %s)', (b_search_keyword['b_id'], p_name))
+                conn.commit()
+            conn.commit()
 
     except Exception:
         err = traceback.format_exc()
