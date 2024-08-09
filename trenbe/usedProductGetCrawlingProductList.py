@@ -100,7 +100,7 @@ def __main__():
             time.sleep(2)
 
             driver.find_element(By.CSS_SELECTOR, '.input-wrap > input').send_keys(b_search_keyword['b_search_keyword'])
-            time.sleep(2)
+            time.sleep(3)
             driver.find_element(By.CSS_SELECTOR, '.StepItemList__ListContainer-sc-4a1pi5-1').click()
 
             time.sleep(4)
