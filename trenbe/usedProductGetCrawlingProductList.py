@@ -137,6 +137,7 @@ def __main__():
                 p_name = product.select_one('p').text
 
                 cur.execute('insert ignore into product_resale(`b_id`, `m_id`, `pr_name`) values(%s, 2, %s)', (b_search_keyword['b_id'], p_name))
+                cur.execute('delete from crawling_product_list where cpl_id = %s', (b_search_keyword['cpl_id']))
                 conn.commit()
             conn.commit()
 
