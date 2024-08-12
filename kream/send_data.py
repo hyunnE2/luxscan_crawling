@@ -27,7 +27,7 @@ DB_CONFIG = {
 
 TABLE_LIST = [
     'brand', 'category', 'config', 'crawling_product_list', 'market', 
-    'price_by_option_of_product', 'product', 'product_sell_history', 'grade'
+    'price_by_option_of_product', 'product', 'product_sell_history', 'grade', 'used_product', 'product_resale', 'used_product_sell_history'
 ]
 
 LOG_FILE = SAVE_PATH+'send_data.log'
@@ -169,9 +169,10 @@ def main():
         brands = fetch_brand_list(cur)
     
         for table in TABLE_LIST:
-            if table == 'product':
+            if table == 'product' or table == 'used_product':
                 for brand in brands:
-                    rows = fetch_table_data(cur, table, 'm_name, b_name, p_name, p_name_kr, p_price, p_origin_price, p_count, p_option, p_model_number, p_color, p_url, p_img_url, p_last_crawling_datetime', 'join market on market.m_id = product.m_id join brand on brand.b_id = product.b_id', f'where product.b_id = {brand["b_id"]}')
+                    
+                    rows = fetch_table_data(cur, table, 'm_name, b_name, p_name, p_name_kr, p_price, p_origin_price, p_count, p_option, p_model_number, p_color, p_url, p_img_url, p_last_crawling_datetime', f'join market on market.m_id = {table}.m_id join brand on brand.b_id = {table}.b_id', f'where {table}.b_id = {brand["b_id"]}')
 
                     if len(rows) > 0:
                         save_to_csv(rows, f'{table}_{brand["b_name"]}')
@@ -180,8 +181,8 @@ def main():
 
                 save_to_csv(rows, table)
 
-        send_files_via_sftp()
-        delete_files()
+        # send_files_via_sftp()
+        # delete_files()
 
     except Exception as e:
         log_message(f"Error: {traceback.format_exc()}")
