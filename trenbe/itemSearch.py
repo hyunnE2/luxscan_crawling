@@ -40,7 +40,7 @@ def fetch_brand(cur):
     tmp_brands = cur.fetchall()
     brands = {}
     for brand in tmp_brands:
-        brands[brand['b_name'].replace(' ', '').upper()] = brand['b_id']
+        brands[brand['b_search_keyword'].replace(' ', '').upper()] = brand['b_id']
 
     return brands
 
@@ -56,7 +56,7 @@ def fetch_grade(cur):
 
 def init_chrome_options():
     chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument("--headless=new")
+    # chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -121,8 +121,8 @@ try:
                 
                 upper_brand = tmp_product['brand'].replace(' ', '').upper()
                 if brands.get(upper_brand) == None:
-                    cur.execute(f"insert into brand(`m_id`, `b_name`, `b_search_keyword`) values (5, '{tmp_product['brand']}', '{tmp_product['brand']}')")
-                    cur.execute("select * from brand where m_id = 5 order by b_id desc limit 1")
+                    cur.execute("insert into brand(`m_id`, `b_name`, `b_search_keyword`) values (2, %s, %s)", (tmp_product['brand'],tmp_product['brand']))
+                    cur.execute("select * from brand where m_id = 2 order by b_id desc limit 1")
                     b_id = cur.fetchone()['b_id']
 
                     brands[upper_brand] = b_id
@@ -139,7 +139,8 @@ try:
                 cur.execute(sql, (tmp_product['brand'], grades.get(tmp_product['grade']), tmp_product['name'], tmp_product['price'], 'https://www.trenbe.com'+tmp_product['url']))
                 conn.commit()
 
-            except Exception as e:
+            except Exception:
+                e = traceback.format_exc()
                 write_log(LOG_FILE, f"Error inserting used_product: {e}")
 
         time.sleep(2)  # Pause before moving to the next page
