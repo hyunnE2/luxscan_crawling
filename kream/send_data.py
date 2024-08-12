@@ -181,8 +181,8 @@ def main():
 
                 save_to_csv(rows, table)
 
-        # send_files_via_sftp()
-        # delete_files()
+        send_files_via_sftp()
+        delete_files()
 
     except Exception as e:
         log_message(f"Error: {traceback.format_exc()}")
