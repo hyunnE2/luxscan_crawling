@@ -105,7 +105,8 @@ def __main__():
             if source.select_one('.ProductOptions__ButtonGroupWrap-pq9f9q-1 > button').text.find('품절') > -1:
                 write_log(LOG_FILE, f'sold out p_id : {product["p_id"]}')
                 cur.execute(f'update used_product set p_is_possible_crawling = 0 where p_id = {product["p_id"]}')
-                cur.execute('insert into used_product_sell_history(p_id, g_id, psh_datetime, psh_price, psh_is_quickly) values(%s, %s, %s, %s, 0)', (product['p_id'], grades[product['p_option']], datetime.now(), product['p_price']))
+                g = grades.get(product['p_option'])
+                cur.execute('insert into used_product_sell_history(p_id, g_id, psh_datetime, psh_price, psh_is_quickly) values(%s, %s, %s, %s, 0)', (product['p_id'], g, datetime.now(), product['p_price']))
             else:
                 if int(price) != product['p_price']:
                     write_log(LOG_FILE, f'update p_id : {product["p_id"]}')
