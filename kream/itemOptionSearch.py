@@ -102,16 +102,16 @@ def process_product(session, product, cur, ua, headers):
     script_content = extract_script_content(response.text)
     if script_content is None:
         write_log(LOG_FILE, "script not found")
-        return False, product['p_id']
+        return False, product['p_id'], 200
     
     nuxt_data = parse_nuxt_data(script_content)
     if nuxt_data is None:
         write_log(LOG_FILE, "failed to parse nuxt data")
-        return False, product['p_id']
+        return False, product['p_id'], 200
     
     upsert_product_prices(cur, product['p_id'], json.loads(nuxt_data))
     write_log(LOG_FILE, f"success. p_id : {product['p_id']}")
-    return True, product['p_id']
+    return True, product['p_id'], 200
 
 # Main function to perform crawling
 def main():
@@ -142,8 +142,11 @@ def main():
             success, p_id, code = process_product(session, product, cur, ua, headers)
             if not success:
                 update_last_crawled_p_id(cur, p_id - 1)
+                print(code == 404)
                 if code == 404:
                     update_last_crawled_p_id(cur, p_id)
+                    conn.commit()
+                    continue
                 break
 
             update_last_crawled_p_id(cur, p_id)
