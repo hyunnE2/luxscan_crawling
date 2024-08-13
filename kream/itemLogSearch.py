@@ -6,7 +6,7 @@ import traceback
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import ElementNotInteractableException
+from selenium.common.exceptions import ElementNotInteractableException, NoSuchElementException
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -80,11 +80,16 @@ try:
 
         driver.get(crawling_item['p_url'])
         time.sleep(2)
+        
         try:
             driver.find_element(By.CSS_SELECTOR, '.tab_content > .outlinegrey').click()        
         except ElementNotInteractableException:
             continue
-            
+        except NoSuchElementException:
+            cur.execute('delete from crawling_product_list where cpl_id = %s', (crawling_item['cpl_id']))
+            file.write(f"NoSuch Error")
+            conn.commit()
+            continue
 
         cur.execute(f'select count(*) as count, date(psh_datetime) as psh_datetime from product_sell_history where p_id = {crawling_item["p_id"]} group by psh_datetime order by psh_datetime desc')
         last_data = cur.fetchone()
