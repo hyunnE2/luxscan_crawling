@@ -96,6 +96,7 @@ def process_product(session, product, cur, ua, headers):
     response = session.get(product['p_url'], headers=headers)
     if response.status_code != 200:
         write_log(LOG_FILE, "status_code = "+str(response.status_code))
+        write_log(LOG_FILE, "error url = "+response.url)
         return False, product['p_id']
     
     script_content = extract_script_content(response.text)
@@ -119,7 +120,7 @@ def main():
 
     init_log(LOG_FILE)
     session = requests.Session()
-
+    
     try:
         conn = pymysql.connect(**DB_CONFIG)
         cur = conn.cursor(pymysql.cursors.DictCursor)
@@ -138,7 +139,6 @@ def main():
         for i, product in enumerate(products):
             if i % 400 == 0:
                 headers = {'user-agent': ua.random}
-
             success, p_id = process_product(session, product, cur, ua, headers)
             if not success:
                 update_last_crawled_p_id(cur, p_id - 1)
