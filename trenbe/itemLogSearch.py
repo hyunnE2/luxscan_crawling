@@ -99,7 +99,7 @@ def __main__():
             source = BeautifulSoup(driver.page_source, 'html.parser')
             price = re.sub(r'[,\s원-]', '', source.select_one('.PriceWithTag__Price-mzv8qx-0').text)
             img_urls = ','.join([img['src'] for img in source.select('.alice-carousel__stage > li img')])
-            
+
             if price=='':
                 price=0
             if source.select_one('.ProductOptions__ButtonGroupWrap-pq9f9q-1 > button').text.find('품절') > -1:
@@ -109,7 +109,7 @@ def __main__():
             else:
                 if int(price) != product['p_price']:
                     write_log(LOG_FILE, f'update p_id : {product["p_id"]}')
-                    cur.execute('update used_product set p_price = %s, p_last_crawling_datetime = %s, p_img_url = %s where p_id = %s', (price, datetime.now(), product['p_id'], img_urls))
+                    cur.execute('update used_product set p_price = %s, p_last_crawling_datetime = %s, p_img_url = %s where p_id = %s', (price, datetime.now(), img_urls, product['p_id']))
             cur.execute("update config set cfg_value = %s where cfg_key = 'trenbe_crawled_p_id'", (product['p_id']))
             conn.commit()
 
