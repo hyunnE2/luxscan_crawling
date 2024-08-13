@@ -114,7 +114,7 @@ def __main__():
 
     except Exception:
         err = traceback.format_exc()
-
+        write_log(LOG_FILE, err)
     finally:
         driver.quit()
         conn.close()
