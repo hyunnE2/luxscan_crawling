@@ -160,6 +160,8 @@ try:
             conn.commit()
         
         last_cpl_id = crawling_item["cpl_id"]
+        cur.execute('delete from crawling_product_list where cpl_id = %s', (crawling_item['cpl_id']))
+        conn.commit()
     
     if len(crawling_items) > 0:
         file.write(f'bot2 : delete smaller than {last_cpl_id}\n')
