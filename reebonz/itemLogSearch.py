@@ -89,7 +89,6 @@ def __main__():
 
         for product in products:
             driver.get(product['p_url'])
-            print(product['p_id'])
             time.sleep(5)
             try:
                 soup = BeautifulSoup(driver.page_source, 'html.parser')    
