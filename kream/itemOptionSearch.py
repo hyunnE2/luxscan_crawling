@@ -97,7 +97,7 @@ def process_product(session, product, cur, ua, headers):
     if response.status_code != 200:
         write_log(LOG_FILE, "status_code = "+str(response.status_code))
         write_log(LOG_FILE, "error url = "+response.url)
-        return False, product['p_id']
+        return False, product['p_id'], response.status_code
     
     script_content = extract_script_content(response.text)
     if script_content is None:
@@ -139,9 +139,11 @@ def main():
         for i, product in enumerate(products):
             if i % 400 == 0:
                 headers = {'user-agent': ua.random}
-            success, p_id = process_product(session, product, cur, ua, headers)
+            success, p_id, code = process_product(session, product, cur, ua, headers)
             if not success:
                 update_last_crawled_p_id(cur, p_id - 1)
+                if code == 404:
+                    update_last_crawled_p_id(cur, p_id)
                 break
 
             update_last_crawled_p_id(cur, p_id)
