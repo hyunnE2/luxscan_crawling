@@ -98,7 +98,12 @@ def __main__():
 
             source = BeautifulSoup(driver.page_source, 'html.parser')
             price = re.sub(r'[,\s원-]', '', source.select_one('.PriceWithTag__Price-mzv8qx-0').text)
-            img_urls = ','.join([img['src'] for img in source.select('.alice-carousel__stage > li img')])
+            img_urls = ''
+
+            for img in source.select('.alice-carousel__stage > li img'):
+                if img['src'] != None:
+                    img_urls += ','+img['src']
+            img_urls = img_urls.replace(',', '', 1)
 
             if price=='':
                 price=0
