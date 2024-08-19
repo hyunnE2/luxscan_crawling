@@ -101,7 +101,7 @@ def __main__():
             img_urls = ''
 
             for img in source.select('.alice-carousel__stage > li img'):
-                if img['src'] != None:
+                if 'src' in img.attrs:
                     img_urls += ','+img['src']
             img_urls = img_urls.replace(',', '', 1)
 
