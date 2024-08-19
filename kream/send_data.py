@@ -169,7 +169,7 @@ def main():
         brands = fetch_brand_list(cur)
     
         for table in TABLE_LIST:
-            if table == 'product' or table == 'used_product':
+            if table == 'product':
                 for brand in brands:
                     
                     rows = fetch_table_data(cur, table, 'm_name, b_name, p_name, p_name_kr, p_price, p_origin_price, p_count, p_option, p_model_number, p_color, p_url, p_img_url, p_last_crawling_datetime', f'join market on market.m_id = {table}.m_id join brand on brand.b_id = {table}.b_id', f'where {table}.b_id = {brand["b_id"]}')
