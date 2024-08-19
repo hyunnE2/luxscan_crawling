@@ -35,7 +35,7 @@ LOG_FILE = SAVE_PATH+'send_data.log'
 
 def log_message(message, log_file=LOG_FILE, type="a", show_date=True):
     """Logs a message to the log file with a timestamp."""
-    with open(log_file, type, encoding='euc-kr') as file:
+    with open(log_file, type, encoding='utf-8') as file:
         if show_date:
             file.write(f"{datetime.now()}: {message}\n")
         else:
