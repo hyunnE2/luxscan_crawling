@@ -139,7 +139,6 @@ def __main__():
                     driver.back()
                     time.sleep(1)
 
-                    break
             
         # driver.get('https://www.trenbe.com/resale/product-registration/brand?stepName=BRAND')
         # time.sleep(2)
