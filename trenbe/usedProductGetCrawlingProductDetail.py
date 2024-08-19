@@ -60,7 +60,7 @@ def get_last_crawled_pr_id(cur):
 
 def init_chrome_options():
     chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument("--headless=new")
+    # chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -77,8 +77,8 @@ def __main__():
         cur = conn.cursor(pymysql.cursors.DictCursor)
 
         last_crawled_pr_id = get_last_crawled_pr_id(cur)
-
         crawling_product = fetch_crawling_products(cur, last_crawled_pr_id)
+        print(last_crawled_pr_id)
 
         chrome_options = init_chrome_options()
 
@@ -89,7 +89,6 @@ def __main__():
         if len(crawling_product) < 1:
             cur.execute('delete from config where cfg_key="trenbe_crawled_pr_id"')
             conn.commit()
-
         
         brand_keyword = ''
         for product in crawling_product:
@@ -102,16 +101,22 @@ def __main__():
                 driver.find_element(By.CSS_SELECTOR, '.StepItemList__ListContainer-sc-4a1pi5-1').click()
                 time.sleep(3)
                 brand_keyword = product['b_search_keyword']
+
+                driver.execute_script('window.scrollTo(0, 180);')
             driver.find_element(By.CSS_SELECTOR, '.input-wrap > input').send_keys(product['pr_name'])
             
+
             time.sleep(1)
             driver_product_list = driver.find_elements(By.CSS_SELECTOR, '.StepItemList__ListContainer-sc-4a1pi5-1 > div')
             for driver_product in driver_product_list:
                 if driver_product.text.find(product['pr_name']) > -1:
-                    driver_product.click()
-                    time.sleep(1)
+                    scrollItem = driver.find_element(By.CSS_SELECTOR, '.StepItemList__StepItemListWrap-sc-4a1pi5-0')
+                    driver.execute_script(f'arguments[0].scrollTo(0, {driver_product.location['y']}); return arguments[0].scrollHeight', scrollItem)
+                    time.sleep(2)
 
-                    
+                    driver_product.click()
+                    time.sleep(2)
+
                     driver_product_detail = driver.find_elements(By.CSS_SELECTOR,'.ConfirmModal__DataLineContainer-sc-1brpfr9-5 dd')
 
                     category = driver_product_detail[0].text
@@ -138,7 +143,7 @@ def __main__():
 
                     driver.back()
                     time.sleep(1)
-
+                    break
             
         # driver.get('https://www.trenbe.com/resale/product-registration/brand?stepName=BRAND')
         # time.sleep(2)
@@ -155,6 +160,7 @@ def __main__():
         print(err)
 
     finally:
+        driver.quit()
         conn.close()
         write_log(LOG_FILE, f"End at: {datetime.now()}")
 
