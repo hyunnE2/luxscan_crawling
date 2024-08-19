@@ -64,6 +64,16 @@ def init_chrome_options():
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
     return chrome_options
 
+def quitDriver(driver):
+    try:
+        driver.close()
+    except Exception as e1:
+        pass
+    try:
+        driver.quit()
+    except Exception as e:
+        pass
+    
 try:
     # Create a new instance of the Chrome driver
     chrome_options = init_chrome_options()
@@ -149,6 +159,6 @@ try:
 except Exception as e:
     write_log(LOG_FILE, f"Error: {e}")
 finally:
-    driver.quit()
+    quitDriver(driver)
     conn.close()
     write_log(LOG_FILE, f"End at: {datetime.now()}")

@@ -25,6 +25,16 @@ DB_CONFIG = {
 
 SAVE_PATH = os.environ.get('SAVE_PATH')+'kream/'
 
+def quitDriver(driver):
+    try:
+        driver.close()
+    except Exception as e1:
+        pass
+    try:
+        driver.quit()
+    except Exception as e:
+        pass
+
 file = open(SAVE_PATH+'itemSearch.log', 'a', encoding='euc-kr')
 file.write(f'start bot1 at : {datetime.now()}\n')
 

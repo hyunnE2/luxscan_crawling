@@ -6,6 +6,16 @@ import time
 from dotenv import load_dotenv
 import os
 
+def quitDriver(driver):
+    try:
+        driver.close()
+    except Exception as e1:
+        pass
+    try:
+        driver.quit()
+    except Exception as e:
+        pass
+
 load_dotenv()
 
 SAVE_PATH = os.environ.get('SAVE_PATH')+'trenbe/'
@@ -76,4 +86,4 @@ with open(SAVE_PATH+"brand.txt", "w", encoding="utf-8") as file:
         file.write(f"{eng_name},{kor_name}\n")
 
 
-driver.quit()
+quitDriver(driver)

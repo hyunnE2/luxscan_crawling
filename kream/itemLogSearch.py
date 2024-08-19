@@ -30,6 +30,16 @@ SAVE_PATH = os.environ.get('SAVE_PATH')+'kream/'
 crawling_id = os.environ.get('CRAWLING_ID')
 crawling_pw = os.environ.get('CRAWLING_PW')
 
+def quitDriver(driver):
+    try:
+        driver.close()
+    except Exception as e1:
+        pass
+    try:
+        driver.quit()
+    except Exception as e:
+        pass
+
 file = open(SAVE_PATH+'itemLogSearch.log', 'a', encoding='euc-kr')
 file.write(f'start bot2 at : {datetime.now()}\n')
 
@@ -186,5 +196,5 @@ except Exception:
 file.write(f'end bot2 at : {datetime.now()}\n\n')
 file.close()
 
-driver.quit()
+quitDriver(driver)
 conn.close()

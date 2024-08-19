@@ -68,6 +68,15 @@ def init_chrome_options(ua):
     chrome_options.add_argument(f"user-agent={ua}")
     return chrome_options
 
+def quitDriver(driver):
+    try:
+        driver.close()
+    except Exception as e1:
+        pass
+    try:
+        driver.quit()
+    except Exception as e:
+        pass
 
 try:
     ua = UserAgent()
@@ -147,5 +156,5 @@ except Exception as e:
     write_log(LOG_FILE, f"Error: {e}")
 finally:
     conn.close()
-    driver.quit()
+    quitDriver(driver)
     write_log(LOG_FILE, f"End at: {datetime.now()}")

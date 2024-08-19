@@ -63,6 +63,15 @@ def fetch_used_products(cur, last_crawled_p_id, p_count=80, limit=400):
     cur.execute(f"SELECT * FROM used_product WHERE m_id = 2 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} AND p_is_possible_crawling = 1 LIMIT {limit}")
     return cur.fetchall()
 
+def quitDriver(driver):
+    try:
+        driver.close()
+    except Exception as e1:
+        pass
+    try:
+        driver.quit()
+    except Exception as e:
+        pass
 
 def __main__():
     try:
@@ -104,7 +113,6 @@ def __main__():
                 if 'src' in img.attrs:
                     img_urls += ','+img['src']
             img_urls = img_urls.replace(',', '', 1)
-
             if price=='':
                 price=0
             if source.select_one('.ProductOptions__ButtonGroupWrap-pq9f9q-1 > button').text.find('품절') > -1:
@@ -118,13 +126,14 @@ def __main__():
                     cur.execute('update used_product set p_price = %s, p_last_crawling_datetime = %s, p_img_url = %s where p_id = %s', (price, datetime.now(), img_urls, product['p_id']))
             cur.execute("update config set cfg_value = %s where cfg_key = 'trenbe_crawled_p_id'", (product['p_id']))
             conn.commit()
+            
 
-
+        
     except Exception:
         err = traceback.format_exc()
         write_log(LOG_FILE, err)
     finally:
-        driver.quit()
+        quitDriver(driver)
         conn.close()
         write_log(LOG_FILE, f"End at: {datetime.now()}")
 

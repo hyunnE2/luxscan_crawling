@@ -69,6 +69,16 @@ def insert_log(cur, product):
     cur.execute("update used_product set b_id = %s, p_is_possible_crawling = %s, p_last_crawling_datetime = %s where p_id = %s", (product['b_id'], 0, datetime.now(), product['p_id']))
     cur.execute("insert into used_product_sell_history(p_id, psh_datetime, psh_price) values(%s, %s, %s)", (product['p_id'], datetime.now(), product['p_price']))
 
+def quitDriver(driver):
+    try:
+        driver.close()
+    except Exception as e1:
+        pass
+    try:
+        driver.quit()
+    except Exception as e:
+        pass
+
 def __main__():
     try:
         init_log(LOG_FILE)
@@ -147,7 +157,7 @@ def __main__():
 
     finally:
         conn.close()
-        driver.quit()
+        quitDriver(driver)
         write_log(LOG_FILE, f"End at: {datetime.now()}")
 
 if __name__ == "__main__":
