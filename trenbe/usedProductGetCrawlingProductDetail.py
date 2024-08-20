@@ -60,7 +60,7 @@ def get_last_crawled_pr_id(cur):
 
 def init_chrome_options():
     chrome_options = webdriver.ChromeOptions()
-    # chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -111,7 +111,7 @@ def __main__():
             for driver_product in driver_product_list:
                 if driver_product.text.find(product['pr_name']) > -1:
                     scrollItem = driver.find_element(By.CSS_SELECTOR, '.StepItemList__StepItemListWrap-sc-4a1pi5-0')
-                    driver.execute_script(f'arguments[0].scrollTo(0, {driver_product.location['y']}); return arguments[0].scrollHeight', scrollItem)
+                    driver.execute_script(f'arguments[0].scrollTo(0, {driver_product.location['y']});', scrollItem)
                     time.sleep(2)
 
                     driver_product.click()
