@@ -116,10 +116,9 @@ def __main__():
                 write_log(LOG_FILE, f"selled found : p_url {product['p_url']}")
                 update_used_product(cur, product, True)
             except Exception:
-                if soup.select_one('.coupon-info-wrap').text.find('렌트') > -1:
-                    write_log(LOG_FILE, f"rent product : p_url {product['p_url']}")
-                    cur.execute('update used_product set p_is_possible_crawling=%s, p_option=%s, p_price=%s, p_img_url=%s, p_last_crawling_datetime=%s where p_id=%s', (0, 'rent product', product['p_price'], product['p_img_url'], datetime.now(), product['p_id']))
-                    
+                write_log(LOG_FILE, f"rent product : p_url {product['p_url']}")
+                cur.execute('update used_product set p_is_possible_crawling=%s, p_option=%s, p_price=%s, p_img_url=%s, p_last_crawling_datetime=%s where p_id=%s', (-1, 'rent product', product['p_price'], product['p_img_url'], datetime.now(), product['p_id']))
+                
 
             cur.execute("update config set cfg_value = %s where cfg_key = 'reebonz_crawled_p_id'", (product['p_id']))
             conn.commit()
