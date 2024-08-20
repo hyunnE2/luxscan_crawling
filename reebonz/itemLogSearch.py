@@ -45,7 +45,7 @@ def get_last_crawled_p_id(cur):
 
 # Fetch products to crawl
 def fetch_used_products(cur, last_crawled_p_id, p_count=80, limit=400):
-    cur.execute(f"SELECT * FROM used_product WHERE m_id = 5 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
+    cur.execute(f"SELECT * FROM used_product WHERE m_id = 5 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} AND p_is_possible_crawling=1 LIMIT {limit}")
     return cur.fetchall()
 
 def init_chrome_options(ua):
@@ -101,7 +101,7 @@ def __main__():
             driver.get(product['p_url'])
             time.sleep(5)
             try:
-                soup = BeautifulSoup(driver.page_source, 'html.parser')    
+                soup = BeautifulSoup(driver.page_source, 'html.parser')
                 product['p_price'] = re.sub(r'[,\s원-]', '', soup.select_one('.main-section .price').text.strip())
                 product['p_img_url'] = ','.join([img['src'] for img in soup.select('.product-image-view .swiper-wrapper img')])
                 buy_btn = soup.select_one('#buttonsArea > ul')
@@ -115,6 +115,11 @@ def __main__():
             except UnexpectedAlertPresentException:
                 write_log(LOG_FILE, f"selled found : p_url {product['p_url']}")
                 update_used_product(cur, product, True)
+            except Exception:
+                if soup.select_one('.coupon-info-wrap').text.find('렌트') > -1:
+                    write_log(LOG_FILE, f"rent product : p_url {product['p_url']}")
+                    cur.execute('update used_product set p_is_possible_crawling=%s, p_option=%s, p_price=%s, p_img_url=%s, p_last_crawling_datetime=%s where p_id=%s', (0, 'rent product', product['p_price'], product['p_img_url'], datetime.now(), product['p_id']))
+                    
 
             cur.execute("update config set cfg_value = %s where cfg_key = 'reebonz_crawled_p_id'", (product['p_id']))
             conn.commit()
