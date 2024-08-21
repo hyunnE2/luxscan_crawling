@@ -111,7 +111,7 @@ def __main__():
             for driver_product in driver_product_list:
                 if driver_product.text.find(product['pr_name']) > -1:
                     scrollItem = driver.find_element(By.CSS_SELECTOR, '.StepItemList__StepItemListWrap-sc-4a1pi5-0')
-                    driver.execute_script(f'arguments[0].scrollTo(0, {driver_product.location['y']});', scrollItem)
+                    driver.execute_script(f'arguments[0].scrollTo(0, {driver_product.location["y"]});', scrollItem)
                     time.sleep(2)
 
                     driver_product.click()
