@@ -138,7 +138,11 @@ def __main__():
 
                 p_name = product.select_one('p').text
                 p_img_url = product.select_one('source')['srcset']
-                p_img_url = p_img_url[:p_img_url.find('1x,')]
+
+                if p_img_url == None:
+                    p_img_url = ""
+                else:
+                    p_img_url = p_img_url[:p_img_url.find('1x,')]
 
                 cur.execute('insert ignore into product_resale(`b_id`, `m_id`, `pr_name`, `pr_img_url`) values(%s, 2, %s)', (b_search_keyword['b_id'], p_name, p_img_url))
                 cur.execute('delete from crawling_product_list where cpl_id = %s', (b_search_keyword['cpl_id']))

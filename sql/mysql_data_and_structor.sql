@@ -211,11 +211,26 @@ CREATE TABLE IF NOT EXISTS `product_daily_statistics` (
   `ps_id` INT NOT NULL AUTO_INCREMENT,
   `ps_stat_date` DATE NOT NULL,
   `p_id` INT DEFAULT NULL,
-  `min_price` DECIMAL(10, 0) DEFAULT NULL,
-  `max_price` DECIMAL(10, 0) DEFAULT NULL,
-  `avg_price` DECIMAL(10, 0) DEFAULT NULL,
-  `total_sales` INT DEFAULT 0,
-  `sold_product_ids` TEXT DEFAULT NULL,
+  `ps_option` VARCHAR(255) DEFAULT NULL,
+  `ps_min_price` DECIMAL(10, 0) DEFAULT NULL,
+  `ps_max_price` DECIMAL(10, 0) DEFAULT NULL,
+  `ps_avg_price` DECIMAL(10, 0) DEFAULT NULL,
+  `ps_total_sales` INT DEFAULT 0,
+  `ps_sold_count` TEXT DEFAULT NULL,
   PRIMARY KEY (`ps_id`),
-  UNIQUE KEY (`ps_stat_date`, `b_id`)
+  UNIQUE KEY (`ps_stat_date`, `b_id`, `ps_option`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `product_monthly_statistics`;
+CREATE TABLE IF NOT EXISTS `product_monthly_statistics` (
+  `ps_id` INT NOT NULL AUTO_INCREMENT,
+  `ps_stat_month` VARCHAR(7) NOT NULL,
+  `p_id` INT DEFAULT NULL,
+  `ps_option` VARCHAR(255) DEFAULT NULL,
+  `ps_min_price` DECIMAL(10, 0) DEFAULT NULL,
+  `ps_max_price` DECIMAL(10, 0) DEFAULT NULL,
+  `ps_avg_price` DECIMAL(10, 0) DEFAULT NULL,
+  `ps_total_sales` INT DEFAULT 0,
+  PRIMARY KEY (`ps_id`),
+  UNIQUE KEY (`ps_stat_month`, `p_id`, `ps_option`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
