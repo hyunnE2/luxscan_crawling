@@ -40,7 +40,7 @@ def write_log(file_path, message):
         f.write(message + '\n')
 
 def fetch_crawling_products(cur, last_crawled_pr_id):
-    cur.execute('select * from product_resale join brand on product_resale.b_id = brand.b_id where brand.m_id = 2 and pr_id > %s limit 100', (last_crawled_pr_id))
+    cur.execute('select * from product_resale join brand on product_resale.b_id = brand.b_id where brand.m_id = 2 and pr_id > %s order by pr_id limit 100', (last_crawled_pr_id))
     return cur.fetchall()
 
 def url_parser(url, params_name):
@@ -91,6 +91,8 @@ def __main__():
         
         brand_keyword = ''
         for idx, product in enumerate(crawling_product):
+            product_found = False
+
             if brand_keyword != product['b_search_keyword']:
                 driver.get('https://www.trenbe.com/resale/product-registration/brand?stepName=BRAND')
                 time.sleep(2)
@@ -104,11 +106,16 @@ def __main__():
                 driver.execute_script('window.scrollTo(0, 180);')
             driver.find_element(By.CSS_SELECTOR, '.input-wrap > input').send_keys(product['pr_name'])
             
+            if idx == 0:
+                time.sleep(10)
+                driver.find_elements(By.CSS_SELECTOR, '.ab-iam-root button')[0].click()
 
             time.sleep(2)
             driver_product_list = driver.find_elements(By.CSS_SELECTOR, '.StepItemList__ListContainer-sc-4a1pi5-1 > div')
             for driver_product in driver_product_list:
                 if driver_product.text.find(product['pr_name']) > -1:
+                    product_found = True
+
                     scrollItem = driver.find_element(By.CSS_SELECTOR, '.StepItemList__StepItemListWrap-sc-4a1pi5-0')
                     driver.execute_script(f'arguments[0].scrollTo(0, {driver_product.location["y"]});', scrollItem)
                     time.sleep(2)
@@ -145,10 +152,9 @@ def __main__():
                     driver.back()
                     time.sleep(1)
                     break
-            if idx == 0:
-                time.sleep(10)
-                driver.find_elements(By.CSS_SELECTOR, '.ab-iam-root button')[0].click()
-
+            if not product_found:
+                driver.refresh()
+                time.sleep(2)
             
 
     except Exception:
