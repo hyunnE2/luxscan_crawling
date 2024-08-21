@@ -78,7 +78,6 @@ def __main__():
 
         last_crawled_pr_id = get_last_crawled_pr_id(cur)
         crawling_product = fetch_crawling_products(cur, last_crawled_pr_id)
-        print(last_crawled_pr_id)
 
         chrome_options = init_chrome_options()
 
@@ -91,7 +90,7 @@ def __main__():
             conn.commit()
         
         brand_keyword = ''
-        for product in crawling_product:
+        for idx, product in enumerate(crawling_product):
             if brand_keyword != product['b_search_keyword']:
                 driver.get('https://www.trenbe.com/resale/product-registration/brand?stepName=BRAND')
                 time.sleep(2)
@@ -106,13 +105,11 @@ def __main__():
             driver.find_element(By.CSS_SELECTOR, '.input-wrap > input').send_keys(product['pr_name'])
             
 
-            time.sleep(1)
+            time.sleep(2)
             driver_product_list = driver.find_elements(By.CSS_SELECTOR, '.StepItemList__ListContainer-sc-4a1pi5-1 > div')
             for driver_product in driver_product_list:
                 if driver_product.text.find(product['pr_name']) > -1:
                     scrollItem = driver.find_element(By.CSS_SELECTOR, '.StepItemList__StepItemListWrap-sc-4a1pi5-0')
-                    driver.execute_script(f'arguments[0].scrollTo(0, {driver_product.location["y"]});', scrollItem)
-                    time.sleep(2)
                     driver.execute_script(f'arguments[0].scrollTo(0, {driver_product.location["y"]});', scrollItem)
                     time.sleep(2)
 
@@ -146,20 +143,15 @@ def __main__():
                     driver.back()
                     time.sleep(1)
                     break
+            if idx == 0:
+                time.sleep(10)
+                driver.find_elements(By.CSS_SELECTOR, '.ab-iam-root button')[0].click()
+
             
-        # driver.get('https://www.trenbe.com/resale/product-registration/brand?stepName=BRAND')
-        # time.sleep(2)
-
-        # driver.find_element(By.CSS_SELECTOR, '.input-wrap > input').send_keys(crawling_product['b_search_keyword'])
-        # time.sleep(2)
-        # driver.find_element(By.CSS_SELECTOR, '.StepItemList__ListContainer-sc-4a1pi5-1').click()
-        # time.sleep(4)
-
-        
 
     except Exception:
         err = traceback.format_exc()
-        print(err)
+        write_log(LOG_FILE, err)
 
     finally:
         driver.quit()
