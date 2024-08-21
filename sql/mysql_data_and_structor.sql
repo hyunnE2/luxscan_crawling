@@ -216,9 +216,8 @@ CREATE TABLE IF NOT EXISTS `product_daily_statistics` (
   `ps_max_price` DECIMAL(10, 0) DEFAULT NULL,
   `ps_avg_price` DECIMAL(10, 0) DEFAULT NULL,
   `ps_total_sales` INT DEFAULT 0,
-  `ps_sold_count` TEXT DEFAULT NULL,
   PRIMARY KEY (`ps_id`),
-  UNIQUE KEY (`ps_stat_date`, `b_id`, `ps_option`)
+  UNIQUE KEY (`ps_stat_date`, `p_id`, `ps_option`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 DROP TABLE IF EXISTS `product_monthly_statistics`;
