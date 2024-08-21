@@ -200,15 +200,22 @@ CREATE TABLE `product_resale` (
   `pr_avg_buy` decimal(10,0),
   `pr_max_sale` decimal(10,0),
   `pr_max_buy` decimal(10,0),
+  `pr_img_url` TEXT DEFAULT NULL,
   `pr_create_datetime` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `pr_update_datetime` DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY `product_resale_unique_key` (`b_id`, `m_id`, `pr_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-
-
-DROP TABLE IF EXISTS `daily_product`;
-CREATE TABLE `daily_product` (
-  `dp_id` INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
-  `dp_`
+DROP TABLE IF EXISTS `product_daily_statistics`;
+CREATE TABLE IF NOT EXISTS `product_daily_statistics` (
+  `ps_id` INT NOT NULL AUTO_INCREMENT,
+  `ps_stat_date` DATE NOT NULL,
+  `p_id` INT DEFAULT NULL,
+  `min_price` DECIMAL(10, 0) DEFAULT NULL,
+  `max_price` DECIMAL(10, 0) DEFAULT NULL,
+  `avg_price` DECIMAL(10, 0) DEFAULT NULL,
+  `total_sales` INT DEFAULT 0,
+  `sold_product_ids` TEXT DEFAULT NULL,
+  PRIMARY KEY (`ps_id`),
+  UNIQUE KEY (`ps_stat_date`, `b_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
