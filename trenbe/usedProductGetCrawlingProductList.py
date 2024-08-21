@@ -59,7 +59,7 @@ def fetch_grade(cur):
 
 
 def fetch_crawling_brand(cur):
-    cur.execute('select * from crawling_product_list join brand on crawling_product_list.b_id = brand.b_id where brand.m_id = 2 and cpl_id=35 ORDER BY cpl_id ')
+    cur.execute('select * from crawling_product_list join brand on crawling_product_list.b_id = brand.b_id where brand.m_id = 2 ORDER BY cpl_id ')
     return cur.fetchall()
 
 def url_parser(url, params_name):
