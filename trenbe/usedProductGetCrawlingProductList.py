@@ -59,7 +59,7 @@ def fetch_grade(cur):
 
 
 def fetch_crawling_brand(cur):
-    cur.execute('select * from crawling_product_list join brand on crawling_product_list.b_id = brand.b_id where brand.m_id = 2 ORDER BY cpl_id ')
+    cur.execute('select * from crawling_product_list join brand on crawling_product_list.b_id = brand.b_id where brand.m_id = 2 and cpl_id=35 ORDER BY cpl_id ')
     return cur.fetchall()
 
 def url_parser(url, params_name):
@@ -71,7 +71,7 @@ def url_parser(url, params_name):
 
 def init_chrome_options():
     chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument("--headless=new")
+    # chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -144,7 +144,7 @@ def __main__():
                 else:
                     p_img_url = p_img_url[:p_img_url.find('1x,')]
 
-                cur.execute('insert ignore into product_resale(`b_id`, `m_id`, `pr_name`, `pr_img_url`) values(%s, 2, %s)', (b_search_keyword['b_id'], p_name, p_img_url))
+                cur.execute('insert ignore into product_resale(`b_id`, `m_id`, `pr_name`, `pr_img_url`) values(%s, 2, %s, %s)', (b_search_keyword['b_id'], p_name, p_img_url))
                 cur.execute('delete from crawling_product_list where cpl_id = %s', (b_search_keyword['cpl_id']))
                 conn.commit()
             
