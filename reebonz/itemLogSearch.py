@@ -44,7 +44,7 @@ def get_last_crawled_p_id(cur):
     return int(result['cfg_value'])
 
 # Fetch products to crawl
-def fetch_used_products(cur, last_crawled_p_id, p_count=80, limit=400):
+def fetch_used_products(cur, last_crawled_p_id, p_count=80, limit=200):
     cur.execute(f"SELECT * FROM used_product WHERE m_id = 5 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
     return cur.fetchall()
 
@@ -102,7 +102,7 @@ def __main__():
             time.sleep(5)
             try:
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
-                print(soup)
+                
                 product['p_price'] = re.sub(r'[,\s원-]', '', soup.select_one('.main-section .price').text.strip())
                 product['p_img_url'] = ','.join([img['src'] for img in soup.select('.product-image-view .swiper-wrapper img')])
                 buy_btn = soup.select_one('#buttonsArea > ul')
@@ -116,6 +116,11 @@ def __main__():
             except UnexpectedAlertPresentException:
                 write_log(LOG_FILE, f"selled found : p_url {product['p_url']}")
                 update_used_product(cur, product, True)
+            except Exception:
+                err = traceback.format_exc()
+                write_log(LOG_FILE, f"Error: {err}")
+                write_log(LOG_FILE, soup)
+                break
                 
 
             cur.execute("update config set cfg_value = %s where cfg_key = 'reebonz_crawled_p_id'", (product['p_id']))
