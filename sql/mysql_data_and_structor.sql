@@ -206,3 +206,9 @@ CREATE TABLE `product_resale` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
+
+DROP TABLE IF EXISTS `daily_product`;
+CREATE TABLE `daily_product` (
+  `dp_id` INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+  `dp_`
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

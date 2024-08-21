@@ -135,6 +135,8 @@ def __main__():
                     avg_buy = re.sub(r'[,\s원-]', '',tds[2].text.strip())
                     max_sale = re.sub(r'[,\s원-]', '',tds[4].text.strip())
                     max_buy = re.sub(r'[,\s원-]', '',tds[5].text.strip())
+                    
+                    print(product['pr_id'])
 
                     cur.execute('update product_resale set pr_category=%s, pr_update_datetime=%s, pr_avg_sale=%s, pr_avg_buy=%s, pr_max_sale=%s, pr_max_buy=%s where pr_id = %s', (category, datetime.now(), avg_sale,avg_buy,max_sale,max_buy, product['pr_id']))
                     cur.execute('update config set cfg_value = %s where cfg_key = "trenbe_crawled_pr_id"', (product['pr_id']))
