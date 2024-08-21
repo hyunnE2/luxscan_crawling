@@ -119,7 +119,7 @@ def __main__():
             except Exception:
                 err = traceback.format_exc()
                 write_log(LOG_FILE, f"Error: {err}")
-                write_log(LOG_FILE, soup)
+                write_log(LOG_FILE, soup.text)
                 break
                 
 
