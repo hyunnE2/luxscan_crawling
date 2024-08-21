@@ -102,6 +102,7 @@ def __main__():
             time.sleep(3)
             try:
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
+                print(product['p_id'])
                 product['p_price'] = re.sub(r'[,\s원-]', '', soup.select_one('.main-section .price').text.strip())
                 product['p_img_url'] = ','.join([img['src'] for img in soup.select('.product-image-view .swiper-wrapper img')])
                 buy_btn = soup.select_one('#buttonsArea > ul')
