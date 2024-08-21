@@ -113,6 +113,8 @@ def __main__():
                     scrollItem = driver.find_element(By.CSS_SELECTOR, '.StepItemList__StepItemListWrap-sc-4a1pi5-0')
                     driver.execute_script(f'arguments[0].scrollTo(0, {driver_product.location["y"]});', scrollItem)
                     time.sleep(2)
+                    driver.execute_script(f'arguments[0].scrollTo(0, {driver_product.location["y"]});', scrollItem)
+                    time.sleep(2)
 
                     driver_product.click()
                     time.sleep(2)
