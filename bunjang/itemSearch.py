@@ -48,7 +48,7 @@ def fetch_bunjang_products(cur, last_crawled_p_id, p_count=80, limit=400):
     return cur.fetchall()
 
 def fetch_brand(cur):
-    cur.execute('select * from brand where m_id = 6')
+    cur.execute('select * from brand where m_id = 6 and b_id = 12122')
     tmp_brands = cur.fetchall()
     brands = {}
     for brand in tmp_brands:
@@ -90,13 +90,13 @@ def scrape_data(url, driver):
 
             price = item.find_element(By.CLASS_NAME, "sc-lcIPJg").text  # 가격 클래스 이름으로 변경 필요
             price = re.sub(r'[,\s원-]','',price.strip())
-            price = 0 if price == '' else price
+            price = 0 if price == '' else price.replace('만', '0000')
 
             img_url = item.find_element(By.CSS_SELECTOR, "img.sc-kOPcWz.elHqEV").get_attribute("src")  # 이미지 URL
 
-            transaction_count = item.find_element(By.CLASS_NAME, "sc-kdBSHD").text  # 거래 수량 클래스 이름으로 변경 필요
+            transaction_count = item.find_element(By.CLASS_NAME, "sc-kdBSHD").text
             result = re.sub(r'거래|건', '', transaction_count.strip())
-            result = re.sub(r'\s+', '', result)
+            result = re.sub(r'\s+', '', result).replace('만', '0000')
             
             product_url = item.get_attribute("href")
 
@@ -150,6 +150,7 @@ def __main__():
 
             for item in data:
                 cur.execute(sql, (brands[brand_id], item['name'], item['price'], item['url'], item['transaction_count'], item['img_url']))
+                write_log(LOG_FILE, f"{brands[brand_id]}, {item['name']}, {item['price']}, {item['url']}, {item['transaction_count']}, {item['img_url']}")
                 conn.commit()
 
 

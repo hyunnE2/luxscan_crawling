@@ -59,7 +59,7 @@ def fetch_grade(cur):
 
 
 def fetch_crawling_brand(cur):
-    cur.execute('select * from crawling_product_list join brand on crawling_product_list.b_id = brand.b_id where brand.m_id = 2 ORDER BY cpl_id ')
+    cur.execute('select * from crawling_product_list join brand on crawling_product_list.b_id = brand.b_id where brand.m_id = 2 ORDER BY cpl_id')
     return cur.fetchall()
 
 def url_parser(url, params_name):
@@ -126,7 +126,7 @@ def __main__():
 
                 scrollY += 20000
                 scrollY = driver.execute_script(f'arguments[0].scrollTo(0, {scrollY}); return arguments[0].scrollHeight', scrollItem)
-            time.sleep(2)
+            time.sleep(8)
 
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             product_list = soup.select('.StepItemList__ListContainer-sc-4a1pi5-1 > div')
@@ -137,12 +137,11 @@ def __main__():
                 if d_product.select_one('.market-measurement-badge') == None: continue
 
                 p_name = product.select_one('p').text
-                p_img_url = product.select_one('source')['srcset']
-
-                if p_img_url == None:
-                    p_img_url = ""
-                else:
+                try:
+                    p_img_url = product.select_one('source')['srcset']
                     p_img_url = p_img_url[:p_img_url.find('1x,')]
+                except Exception:
+                    p_img_url = ""
 
                 cur.execute('insert ignore into product_resale(`b_id`, `m_id`, `pr_name`, `pr_img_url`) values(%s, 2, %s, %s)', (b_search_keyword['b_id'], p_name, p_img_url))
                 cur.execute('delete from crawling_product_list where cpl_id = %s', (b_search_keyword['cpl_id']))

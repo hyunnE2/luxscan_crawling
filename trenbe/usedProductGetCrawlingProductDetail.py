@@ -15,6 +15,8 @@ import os
 
 import re
 
+from fake_useragent import UserAgent
+
 load_dotenv()
 
 DB_CONFIG = {
@@ -58,20 +60,24 @@ def get_last_crawled_pr_id(cur):
         return 0
     return int(result['cfg_value'])
 
-def init_chrome_options():
+def init_chrome_options(ua):
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--window-size=1200,960")
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    chrome_options.add_argument("--window-size=1920,960")
+    chrome_options.add_argument(f"user-agent={ua}")
     return chrome_options
 
 
 def __main__():
     try:
         init_log(LOG_FILE)
+        
+        ua = UserAgent()
+        ua.browsers.remove('chrome')
+        ua = ua.random
 
         conn = pymysql.connect(**DB_CONFIG)
         cur = conn.cursor(pymysql.cursors.DictCursor)
@@ -79,11 +85,12 @@ def __main__():
         last_crawled_pr_id = get_last_crawled_pr_id(cur)
         crawling_product = fetch_crawling_products(cur, last_crawled_pr_id)
 
-        chrome_options = init_chrome_options()
-
+        
+        chrome_options = init_chrome_options(ua)
         driver = webdriver.Chrome(executable_path=exe_chromedriver_path, options=chrome_options)
-        driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
+        driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": ua})
         driver.execute_cdp_cmd('Network.enable', {})
+
 
         if len(crawling_product) < 1:
             cur.execute('delete from config where cfg_key="trenbe_crawled_pr_id"')
@@ -107,8 +114,8 @@ def __main__():
             driver.find_element(By.CSS_SELECTOR, '.input-wrap > input').send_keys(product['pr_name'])
             
             if idx == 0:
-                time.sleep(10)
-                driver.find_elements(By.CSS_SELECTOR, '.ab-iam-root button')[0].click()
+                # driver.find_elements(By.CSS_SELECTOR, '.ab-iam-root button')[0].click()
+                print(driver.find_elements(By.CSS_SELECTOR, '.ab-iam-root button'))
 
             time.sleep(2)
             driver_product_list = driver.find_elements(By.CSS_SELECTOR, '.StepItemList__ListContainer-sc-4a1pi5-1 > div')
