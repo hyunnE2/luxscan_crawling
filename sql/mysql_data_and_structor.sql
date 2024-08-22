@@ -156,7 +156,8 @@ CREATE TABLE `product_sell_history` (
   `g_id` INT,
   `p_id` int DEFAULT NULL,
   `psh_option` varchar(255) DEFAULT NULL,
-  `psh_datetime` datetime DEFAULT NULL,
+  `psh_regist_datetime` datetime DEFAULT NULL,
+  `psh_selled_datetime` datetime DEFAULT NULL,
   `psh_price` int DEFAULT NULL,
   `psh_is_quickly` tinyint DEFAULT NULL,
   PRIMARY KEY (`psh_id`)
@@ -169,7 +170,8 @@ CREATE TABLE `used_product_sell_history` (
   `g_id` INT,
   `p_id` int DEFAULT NULL,
   `psh_option` varchar(255) DEFAULT NULL,
-  `psh_datetime` datetime DEFAULT NULL,
+  `psh_regist_datetime` datetime DEFAULT NULL,
+  `psh_selled_datetime` datetime DEFAULT NULL,
   `psh_price` int DEFAULT NULL,
   `psh_is_quickly` tinyint DEFAULT NULL,
   PRIMARY KEY (`psh_id`)
