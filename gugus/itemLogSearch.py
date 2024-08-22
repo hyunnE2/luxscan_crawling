@@ -67,7 +67,7 @@ def init_chrome_options():
 
 def insert_log(cur, product):
     cur.execute("update used_product set b_id = %s, p_is_possible_crawling = %s, p_last_crawling_datetime = %s where p_id = %s", (product['b_id'], 0, datetime.now(), product['p_id']))
-    cur.execute("insert into used_product_sell_history(p_id, psh_datetime, psh_price) values(%s, %s, %s)", (product['p_id'], datetime.now(), product['p_price']))
+    cur.execute("insert into used_product_sell_history(p_id, psh_selled_datetime, psh_price) values(%s, %s, %s)", (product['p_id'], datetime.now(), product['p_price']))
 
 def quitDriver(driver):
     try:

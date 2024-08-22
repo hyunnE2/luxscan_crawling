@@ -101,14 +101,14 @@ try:
             conn.commit()
             continue
 
-        cur.execute(f'select count(*) as count, date(psh_datetime) as psh_datetime from product_sell_history where p_id = {crawling_item["p_id"]} group by psh_datetime order by psh_datetime desc')
+        cur.execute(f'select count(*) as count, date(psh_selled_datetime) as psh_selled_datetime from product_sell_history where p_id = {crawling_item["p_id"]} group by psh_selled_datetime order by psh_selled_datetime desc')
         last_data = cur.fetchone()
         if last_data == None:
             last_data = {}
-            last_data['psh_datetime'] = datetime.strptime('2000-01-01', '%Y-%m-%d')
+            last_data['psh_selled_datetime'] = datetime.strptime('2000-01-01', '%Y-%m-%d')
             count = 0
         else:
-            last_data['psh_datetime'] = datetime.strptime(str(last_data['psh_datetime']), '%Y-%m-%d')
+            last_data['psh_selled_datetime'] = datetime.strptime(str(last_data['psh_selled_datetime']), '%Y-%m-%d')
             count = int(last_data['count'])
         
         scrollItem = driver.find_element(By.CSS_SELECTOR, '.market_price_table > .price_body')
@@ -133,7 +133,7 @@ try:
                 date = datetime.strptime('20' + i.text.replace('/', '-'), '%Y-%m-%d')
                 
                 
-                if date > last_data['psh_datetime']:
+                if date > last_data['psh_selled_datetime']:
                     isbreak = True
                     break
 
@@ -162,14 +162,14 @@ try:
         for item in sorted_items:
             date = datetime.strptime(item['date'], '%Y-%m-%d')
 
-            if date < last_data['psh_datetime']: 
+            if date < last_data['psh_selled_datetime']: 
                 continue
-            elif date == last_data['psh_datetime']:
+            elif date == last_data['psh_selled_datetime']:
                 if count > 0:
                     count -= 1
                     continue
             
-            sql = f'insert into product_sell_history(p_id, psh_option, psh_price, psh_is_quickly, psh_datetime) values ({crawling_item["p_id"]}, \"{item["option"]}\", {item["price"]}, {item["quickly"]}, \"{item["date"]}\")'
+            sql = f'insert into product_sell_history(p_id, psh_option, psh_price, psh_is_quickly, psh_selled_datetime) values ({crawling_item["p_id"]}, \"{item["option"]}\", {item["price"]}, {item["quickly"]}, \"{item["date"]}\")'
 
             cur.execute(sql)
             conn.commit()

@@ -119,7 +119,7 @@ def __main__():
                 write_log(LOG_FILE, f'sold out p_id : {product["p_id"]}')
                 cur.execute(f'update used_product set p_is_possible_crawling = 0 where p_id = {product["p_id"]}')
                 g = grades.get(product['p_option'])
-                cur.execute('insert into used_product_sell_history(p_id, g_id, psh_datetime, psh_price, psh_is_quickly) values(%s, %s, %s, %s, 0)', (product['p_id'], g, datetime.now(), product['p_price']))
+                cur.execute('insert into used_product_sell_history(p_id, g_id, psh_selled_datetime, psh_price, psh_is_quickly) values(%s, %s, %s, %s, 0)', (product['p_id'], g, datetime.now(), product['p_price']))
             else:
                 if int(price) != product['p_price']:
                     write_log(LOG_FILE, f'update p_id : {product["p_id"]}')
