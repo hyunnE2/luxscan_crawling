@@ -44,7 +44,7 @@ def get_last_crawled_p_id(cur):
 
 # Fetch products to crawl
 def fetch_bunjang_products(cur, last_crawled_p_id, p_count=80, limit=400):
-    cur.execute(f"SELECT * FROM used_product WHERE m_id = 6 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
+    cur.execute(f"SELECT * FROM bunjang_product WHERE m_id = 6 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
     return cur.fetchall()
 
 def fetch_brand(cur):
@@ -143,7 +143,7 @@ def __main__():
             data = scrape_data(url, driver)
 
             sql = """
-                INSERT INTO used_product (m_id, b_id, p_name_kr, p_price, p_url, p_origin_price, p_count, p_model_number, p_img_url, p_last_crawling_datetime)
+                INSERT INTO bunjang_product (m_id, b_id, p_name_kr, p_price, p_url, p_origin_price, p_count, p_model_number, p_img_url, p_last_crawling_datetime)
                 VALUES (6, %s, %s, %s, %s, 0, %s, 0, %s, NOW())
                 ON DUPLICATE KEY UPDATE p_last_crawling_datetime = NOW();
             """
