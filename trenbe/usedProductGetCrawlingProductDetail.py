@@ -45,7 +45,7 @@ def write_log(file_path, message):
         f.write(message + '\n')
 
 def fetch_crawling_products(cur, last_crawled_pr_id):
-    cur.execute('select * from product_resale join brand on product_resale.b_id = brand.b_id where brand.m_id = 2 and pr_id > %s order by pr_id limit 200', (last_crawled_pr_id))
+    cur.execute('select * from product_resale join brand on product_resale.b_id = brand.b_id where brand.m_id = 2 and pr_id > %s order by pr_id limit 100', (last_crawled_pr_id))
     return cur.fetchall()
 
 def url_parser(url, params_name):
@@ -135,11 +135,12 @@ def __main__():
                 time.sleep(2)
 
 
-            if idx == 0:
+            # if idx == 0:
                 # driver.find_elements(By.CSS_SELECTOR, '.ab-iam-root button')[0].click()
-                print(driver.find_elements(By.CSS_SELECTOR, '.ab-iam-root button'))
+                # print(driver.find_elements(By.CSS_SELECTOR, '.ab-iam-root button'))
+                # time.sleep(2)
 
-            time.sleep(2)
+
             driver_product_list = driver.find_elements(By.CSS_SELECTOR, '.StepItemList__ListContainer-sc-4a1pi5-1 > div')
             for driver_product in driver_product_list:
                 if driver_product.text.find(product['pr_name']) > -1:
@@ -163,6 +164,12 @@ def __main__():
 
                     driver.find_element(By.CSS_SELECTOR, '.ConfirmModal__ConfirmModalWrap-sc-1brpfr9-0 button.confirm').click()
                     time.sleep(1)
+
+                    try:
+                        s = driver.find_elements(By.CSS_SELECTOR, '.Modal__ModalFooter-n8rj83-5 button')[1].click()
+                        time.sleep(1)
+                    except:
+                        pass
 
                     soup = BeautifulSoup(driver.page_source, 'html.parser')
                     tds = soup.select('.SiseContents__PriceTable-sc-1vnoo68-5 td')

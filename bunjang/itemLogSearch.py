@@ -8,6 +8,7 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 import os
+import json
 
 load_dotenv()
 
@@ -44,17 +45,17 @@ def get_last_crawled_p_id(cur):
     return int(result['cfg_value'])
 
 # Fetch products to crawl
-def fetch_bunjang_products(cur, last_crawled_p_id, p_count=80, limit=400):
+def fetch_bunjang_products(cur, last_crawled_p_id, p_count=1, limit=400):
     cur.execute(f"SELECT * FROM bunjang_product WHERE m_id = 6 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
     return cur.fetchall()
 
-def fetch_brand(cur):
-    cur.execute('select * from brand where m_id = 6')
-    tmp_brands = cur.fetchall()
-    brands = {}
-    for brand in tmp_brands:
-        brands[brand['b_market_id']] = brand['b_id']
-    return brands
+def fetch_category(cur):
+    cur.execute('select * from category where m_id = 6')
+    tmp_categories = cur.fetchall()
+    categories = {}
+    for category in tmp_categories:
+        categories[category['c_name'].replace(' ', '')] = category['c_id']
+    return categories
 
 
 def update_used_product(cur, product, is_selled):
@@ -70,49 +71,62 @@ def __main__():
         conn = pymysql.connect(**DB_CONFIG)
         cur = conn.cursor(pymysql.cursors.DictCursor)
         
-        brands = fetch_brand(cur)
+        categories = fetch_category(cur)
 
         last_crawled_p_id = get_last_crawled_p_id(cur)
         products = fetch_bunjang_products(cur, last_crawled_p_id, p_count=0)
 
         if len(products) < 1:
-            cur.execute("update config set cfg_value = 0 where cfg_key = 'koibito_crawled_p_id'")
+            cur.execute("update config set cfg_value = 0 where cfg_key = 'bunjang_crawled_p_id'")
             write_log(LOG_FILE, 'not found products')
             conn.commit()
 
         for product in products:
-            response = requests.get(product['p_url'])
+            rq_status = False
+
+            m_id = product['p_url'].split('/')[-1]
+            response = requests.get(f'https://api.bunjang.co.kr/api/catalog/v1/products?modelId={m_id}&size=20')
+
             if response.status_code != 200:
                 write_log(LOG_FILE, f"break : status code is {response.status_code}")
                 break
-
-            soup = BeautifulSoup(response.content, 'html.parser')
-            imgs = soup.select('center> table:nth-child(7) > form > tr > td > table > tr > td > div > table > tr > td:nth-child(1) > table > tr:nth-child(2) img')
-            product['img_urls'] = ','.join([img['src'] for img in imgs])
-
-            brand = soup.select(".detail_info_list > .info_list_basic > dd")[0].text.strip()
-            brand = brand[:brand.find('(')]
-            upper_brand = brand.replace(' ', '').upper()
+            data = json.loads(response.content)
             
-            if brands.get(upper_brand) == None:
-                cur.execute(f"insert into brand(`m_id`, `b_name`, `b_search_keyword`) values (3, '{brand}', '{brand}')")
-                cur.execute("select * from brand where m_id = 3 order by b_id desc limit 1")
-                b_id = cur.fetchone()['b_id']
+            total_pages = data['totalPages']
+            total_elements = data['totalElements']
 
-                brands[upper_brand] = b_id
-                product['b_id'] = b_id
-            else:
-                product['b_id'] = brands[upper_brand]
+            crawled_list = []
+            for i in range(total_pages):
+                response = requests.get(f'https://api.bunjang.co.kr/api/catalog/v1/products?modelId={m_id}&page={i}&quickDelivery=false&size=20&sort=date&status=SELLING&status=RESERVED')
 
-            is_sold_out = soup.select_one(".detail_info_title > .info_price").text
-            if is_sold_out.find('품절') > -1:
-                update_used_product(cur, product, True)
-                write_log(LOG_FILE, f"sold out p_id : {product['p_id']}")
-            else:
-                update_used_product(cur, product, False)
-                write_log(LOG_FILE, f"exists p_id : {product['p_id']}")
-            cur.execute("update config set cfg_value = %s where cfg_key = 'koibito_crawled_p_id'", (product['p_id']))
-            conn.commit()
+                if response.status_code != 200:
+                    write_log(LOG_FILE, f"break : status code is {response.status_code}")
+                    rq_status = True
+                    break
+
+                data = json.loads(response.content)[data]
+
+                for item in data:
+                    crawled_list.append({
+                        'title':item['productTitle'], 
+                        'brand':product['p_id'],
+                        'price':item['productPrice'], 
+                        'image':item['productImage'], 
+                        'grade':item['productConditionDesc'],
+                        'url':'https://m.bunjang.co.kr/products/'+item['p_id'], 
+                        'createdAt':item['productCreatedAt'], 
+                        'updatedAt':item['productUpdatedAt'],
+                        'crawledAt':datetime.now()
+                        })
+                    
+
+                break
+
+            if rq_status:
+                break
+
+
+            break
 
 
     except Exception:
