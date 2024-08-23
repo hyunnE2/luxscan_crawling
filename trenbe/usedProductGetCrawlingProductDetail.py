@@ -31,6 +31,9 @@ SAVE_PATH = os.environ.get('SAVE_PATH')+'trenbe/'
 
 exe_chromedriver_path = os.environ.get('EXECUTABLE_CHROMEDRIVER_PATH')
 
+crawling_id = os.environ.get('CRAWLING_ID')
+crawling_pw = os.environ.get('CRAWLING_PW')
+
 LOG_FILE = SAVE_PATH+'usedProductGetCrawlingProductDetail.log'
 
 def init_log(file_path):
@@ -62,7 +65,7 @@ def get_last_crawled_pr_id(cur):
 
 def init_chrome_options(ua):
     chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument("--headless=new")
+    # chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -74,7 +77,7 @@ def init_chrome_options(ua):
 def __main__():
     try:
         init_log(LOG_FILE)
-        
+
         ua = UserAgent()
         ua.browsers.remove('chrome')
         ua = ua.random
@@ -90,6 +93,18 @@ def __main__():
         driver = webdriver.Chrome(executable_path=exe_chromedriver_path, options=chrome_options)
         driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": ua})
         driver.execute_cdp_cmd('Network.enable', {})
+
+        
+        ## login 
+        driver.get('https://www.trenbe.com/login/email')
+        time.sleep(2)
+        inputs = driver.find_elements(By.CSS_SELECTOR, ".form-control")
+        inputs[0].send_keys(crawling_id)
+        inputs[1].send_keys(crawling_pw)
+
+        driver.find_element(By.XPATH, "//*[@id='container']/div/div/div[2]/button").click()
+
+        time.sleep(2)
 
 
         if len(crawling_product) < 1:
@@ -113,6 +128,13 @@ def __main__():
                 driver.execute_script('window.scrollTo(0, 180);')
             driver.find_element(By.CSS_SELECTOR, '.input-wrap > input').send_keys(product['pr_name'])
             
+            scrollItem = driver.find_element(By.CSS_SELECTOR, '.StepItemList__StepItemListWrap-sc-4a1pi5-0')
+            for i in range(1, 2, 3):
+                scrollY = 4000
+                driver.execute_script(f'arguments[0].scrollTo(0, {scrollY});', scrollItem)
+                time.sleep(2)
+
+
             if idx == 0:
                 # driver.find_elements(By.CSS_SELECTOR, '.ab-iam-root button')[0].click()
                 print(driver.find_elements(By.CSS_SELECTOR, '.ab-iam-root button'))
