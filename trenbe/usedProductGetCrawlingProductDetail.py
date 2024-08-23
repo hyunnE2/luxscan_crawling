@@ -65,7 +65,7 @@ def get_last_crawled_pr_id(cur):
 
 def init_chrome_options(ua):
     chrome_options = webdriver.ChromeOptions()
-    # chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
