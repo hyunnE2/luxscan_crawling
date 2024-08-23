@@ -45,7 +45,7 @@ def write_log(file_path, message):
         f.write(message + '\n')
 
 def fetch_crawling_products(cur, last_crawled_pr_id):
-    cur.execute('select * from product_resale join brand on product_resale.b_id = brand.b_id where brand.m_id = 2 and pr_id > %s order by pr_id limit 100', (last_crawled_pr_id))
+    cur.execute('select * from product_resale join brand on product_resale.b_id = brand.b_id where brand.m_id = 2 and pr_id > %s order by pr_id limit 200', (last_crawled_pr_id))
     return cur.fetchall()
 
 def url_parser(url, params_name):
@@ -127,7 +127,7 @@ def __main__():
 
                 driver.execute_script('window.scrollTo(0, 180);')
             driver.find_element(By.CSS_SELECTOR, '.input-wrap > input').send_keys(product['pr_name'])
-            
+
             scrollItem = driver.find_element(By.CSS_SELECTOR, '.StepItemList__StepItemListWrap-sc-4a1pi5-0')
             for i in range(1, 2, 3):
                 scrollY = 4000
