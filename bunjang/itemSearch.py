@@ -42,13 +42,8 @@ def get_last_crawled_p_id(cur):
         return 0
     return int(result['cfg_value'])
 
-# Fetch products to crawl
-def fetch_bunjang_products(cur, last_crawled_p_id, p_count=80, limit=400):
-    cur.execute(f"SELECT * FROM bunjang_product WHERE m_id = 6 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
-    return cur.fetchall()
-
 def fetch_brand(cur):
-    cur.execute('select * from brand where m_id = 6 and b_id = 12122')
+    cur.execute('select * from brand where m_id = 6')
     tmp_brands = cur.fetchall()
     brands = {}
     for brand in tmp_brands:
