@@ -157,8 +157,9 @@ def __main__():
                     category = driver_product_detail[0].text
                     brand = driver_product_detail[1].text
                     pr_detail_name = driver_product_detail[2].text
-
-                    # if(pr_detail_name == product['pr_name'], brand == product['b_search_keyword']):pass
+                    
+                    if driver_product.text.find('바로시세') == -1: 
+                        break
 
                     driver.find_element(By.CSS_SELECTOR, '.ConfirmModal__ConfirmModalWrap-sc-1brpfr9-0 button.confirm').click()
                     time.sleep(1)
