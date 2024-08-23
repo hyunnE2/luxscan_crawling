@@ -133,8 +133,13 @@ def __main__():
             
             for product in product_list:
                 d_product = product.select_one('.ListModelItem__ContentBox-sc-1jm7w42-3')
+                if d_product == None:
+                    write_log(LOG_FILE, 'product None')
+                    continue
 
-                if d_product.select_one('.market-measurement-badge') == None: continue
+                if d_product.select_one('.market-measurement-badge') == None: 
+                    
+                    continue
 
                 p_name = product.select_one('p').text
                 try:
