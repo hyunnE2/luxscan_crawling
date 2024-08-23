@@ -149,7 +149,7 @@ def __main__():
                     driver.execute_script(f'arguments[0].scrollTo(0, {driver_product.location["y"]});', scrollItem)
                     time.sleep(2)
 
-                    driver_product.click()
+                    driver.execute_script("arguments[0].click();", driver_product)
                     time.sleep(2)
 
                     driver_product_detail = driver.find_elements(By.CSS_SELECTOR,'.ConfirmModal__DataLineContainer-sc-1brpfr9-5 dd')
