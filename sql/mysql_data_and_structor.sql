@@ -48,12 +48,12 @@ DROP TABLE IF EXISTS `grade`;
 CREATE TABLE `grade`(
   `g_id` INT NOT NULL AUTO_INCREMENT,
   `m_id` INT,
-  `g_grade` VARCHAR(5) NOT NULL COMMENT 'S+, A+, A, B+, B',
+  `g_grade` VARCHAR(5) COMMENT 'S+, A+, A, B+, B',
   `g_market_grade` VARCHAR(10),
   `g_comment` varchar(255),
   PRIMARY KEY (`g_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-INSERT INTO `grade`(`m_id`, `g_grade`, `g_market_grade`) VALUES (1, 'S+', '100'), (2, 'S+', 'S+'), (2, 'A+', 'A+'), (2, 'A', 'A'), (2, 'B+', 'B+'), (2, 'B', 'B'), (3, 'S+', 'N'), (3, 'S+', 'S'), (3, 'S+', 'SA'), (3, 'A+', 'A+'), (3, 'A', 'A'), (3, 'A', 'A-'), (3, 'B+', 'AB'), (3, 'B+', 'B'), (3, 'B', 'BC'), (3, 'B', 'C'), (4, 'S+', 'N-S'), (4, 'A+', 'A+'), (4, 'A', 'A'), (4, 'B+', 'B+'), (4, 'B', 'B'), (4, 'null', 'USED'), (5, 'S+', 'unused'), (5, 'A+', 'perfect'), (5, 'A', 'excellent'), (5, 'B+', 'very-good'), (5, 'B+', 'good'), (5, 'B', 'normal');
+INSERT INTO `grade`(`m_id`, `g_grade`, `g_market_grade`) VALUES (1, 'S+', '100'), (2, 'S+', 'S+'), (2, 'A+', 'A+'), (2, 'A', 'A'), (2, 'B+', 'B+'), (2, 'B', 'B'), (3, 'S+', 'N'), (3, 'S+', 'S'), (3, 'S+', 'SA'), (3, 'A+', 'A+'), (3, 'A', 'A'), (3, 'A', 'A-'), (3, 'B+', 'AB'), (3, 'B+', 'B'), (3, 'B', 'BC'), (3, 'B', 'C'), (4, 'S+', 'N-S'), (4, 'A+', 'A+'), (4, 'A', 'A'), (4, 'B+', 'B+'), (4, 'B', 'B'), (4, 'null', 'USED'), (5, 'S+', 'unused'), (5, 'A+', 'perfect'), (5, 'A', 'excellent'), (5, 'B+', 'very-good'), (5, 'B+', 'good'), (5, 'B', 'normal'), (6, 'S+', '사용감 없음'), (6, 'A', '사용감 적음'), (6, 'B', '사용감 많음');
 
 
 DROP TABLE IF EXISTS `config`;
@@ -81,7 +81,8 @@ CREATE TABLE `product` (
   `p_color` VARCHAR(255) DEFAULT NULL,
   `p_url` VARCHAR(255) DEFAULT NULL,
   `p_img_url` TEXT DEFAULT NULL,
-  `p_last_crawling_datetime` datetime DEFAULT CURRENT_TIMESTAMP,
+  `p_last_crawling_datetime` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `p_registered_datetime` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `p_is_possible_crawling` TINYINT DEFAULT 1,
   PRIMARY KEY (`p_id`),
   UNIQUE KEY `p_url_unique` (`p_url`),
@@ -106,7 +107,10 @@ CREATE TABLE `used_product` (
   `p_color` VARCHAR(255) DEFAULT NULL,
   `p_url` VARCHAR(255) DEFAULT NULL,
   `p_img_url` TEXT DEFAULT NULL,
-  `p_last_crawling_datetime` datetime DEFAULT CURRENT_TIMESTAMP,
+  `p_created_datetime` DATETIME DEFAULT NULL,   -- Date the product was created on the marketplace
+  `p_updated_datetime` DATETIME DEFAULT NULL,   -- Last time the product was updated on the marketplace
+  `p_last_crawling_datetime` DATETIME DEFAULT CURRENT_TIMESTAMP,  -- Last time the product was crawled
+  `p_registered_datetime` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `p_is_possible_crawling` TINYINT DEFAULT 1,
   PRIMARY KEY (`p_id`),
   UNIQUE KEY `p_url_unique` (`p_url`),
