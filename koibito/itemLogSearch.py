@@ -85,11 +85,16 @@ def __main__():
 
         for product in products:
             response = requests.get(product['p_url'])
-            if response.status_code != 200:
+            if response.status_code != 200: 
                 write_log(LOG_FILE, f"break : status code is {response.status_code}")
                 break
 
             soup = BeautifulSoup(response.content, 'html.parser')
+            if response.text.find('해당 상품이 존재하지 않습니다.') > -1: 
+                update_used_product(cur, product, True)
+                write_log(LOG_FILE, '존재하지 않는 상품')
+                continue
+                
             imgs = soup.select('center> table:nth-child(7) > form > tr > td > table > tr > td > div > table > tr > td:nth-child(1) > table > tr:nth-child(2) img')
             product['img_urls'] = ','.join([img['src'] for img in imgs])
 

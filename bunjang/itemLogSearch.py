@@ -109,7 +109,7 @@ def __main__():
                 for item in data:
                     crawled_list.append({
                         'title':item['productTitle'], 
-                        'brand':product['p_id'],
+                        'brand':product['b_id'],
                         'price':item['productPrice'], 
                         'image':item['productImage'], 
                         'grade':item['productConditionDesc'],

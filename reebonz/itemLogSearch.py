@@ -117,10 +117,13 @@ def __main__():
                 write_log(LOG_FILE, f"selled found : p_url {product['p_url']}")
                 update_used_product(cur, product, True)
             except Exception:
-                err = traceback.format_exc()
-                write_log(LOG_FILE, f"Error: {err}")
-                write_log(LOG_FILE, soup.text)
-                break
+                if soup.select_one('#buttonsArea').text.find('날짜 선택하기') > -1:
+                    print('pass')
+                    pass
+                else:
+                    err = traceback.format_exc()
+                    write_log(LOG_FILE, f"Error: {err}")
+                    break
                 
 
             cur.execute("update config set cfg_value = %s where cfg_key = 'reebonz_crawled_p_id'", (product['p_id']))

@@ -34,14 +34,6 @@ def write_log(file_path, message):
     with open(file_path, 'a', encoding='euc-kr') as f:
         f.write(message + '\n')
 
-def get_last_crawled_p_id(cur):
-    cur.execute("SELECT * FROM config WHERE cfg_key = 'bunjang_crawled_p_id'")
-    result = cur.fetchone()
-    if result is None:
-        cur.execute("INSERT INTO config(cfg_key, cfg_value) VALUES('bunjang_crawled_p_id', 0)")
-        return 0
-    return int(result['cfg_value'])
-
 def fetch_brand(cur):
     cur.execute('select * from brand where m_id = 6')
     tmp_brands = cur.fetchall()
