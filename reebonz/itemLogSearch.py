@@ -50,7 +50,7 @@ def fetch_used_products(cur, last_crawled_p_id, p_count=80, limit=200):
 
 def init_chrome_options(ua):
     chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument("--headless=new")
+    # chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -117,7 +117,8 @@ def __main__():
                 write_log(LOG_FILE, f"selled found : p_url {product['p_url']}")
                 update_used_product(cur, product, True)
             except Exception:
-                if soup.select_one('#buttonsArea').text.find('날짜 선택하기') > -1:
+                txt = soup.select_one('#buttonsArea').text
+                if txt.find('날짜 선택하기') > -1 or txt.find('렌트') > -1:
                     print('pass')
                     pass
                 else:
