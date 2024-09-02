@@ -65,9 +65,9 @@ def parse_nuxt_data(script_content):
     ctx.eval("window={};")
     ctx.eval(script_content)
     try:
-        return ctx.eval("JSON.stringify(window.__NUXT__.state.product.response.sales_options)")
+        return ctx.eval("JSON.stringify(window.__NUXT__.pinia.product.response.sales_options)")
     except:
-        return ctx.eval("JSON.stringify(window.__NUXT__.state.product.response.sale_info.details.options)")
+        return ctx.eval("JSON.stringify(window.__NUXT__.pinia.product.response.sale_info.details.options)")
 
 # Insert or update product prices
 def upsert_product_prices(cur, product_id, items):
