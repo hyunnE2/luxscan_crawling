@@ -103,6 +103,7 @@ def __main__():
 
         for product in products:
             driver.get(product['p_url'])
+            print(product['p_url'])
             time.sleep(2)
 
             source = BeautifulSoup(driver.page_source, 'html.parser')
