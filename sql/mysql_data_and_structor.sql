@@ -60,7 +60,8 @@ DROP TABLE IF EXISTS `config`;
 CREATE TABLE `config` (
   `cfg_key` VARCHAR(255) NOT NULL,
   `cfg_value` TEXT NOT NULL,
-  INDEX config_cfg_index_key (cfg_key)
+  INDEX `config_cfg_index_key` (`cfg_key`),
+  UNIQUE `config_cfg_unique_key` (`cfg_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci; 
 
 
@@ -161,7 +162,7 @@ CREATE TABLE `product_sell_history` (
   `p_id` int DEFAULT NULL,
   `psh_option` varchar(255) DEFAULT NULL,
   `psh_regist_datetime` datetime DEFAULT NULL,
-  `psh_selled_datetime` datetime DEFAULT NULL,
+  `psh_sold_datetime` datetime DEFAULT NULL,
   `psh_price` int DEFAULT NULL,
   `psh_is_quickly` tinyint DEFAULT NULL,
   PRIMARY KEY (`psh_id`)
@@ -175,7 +176,7 @@ CREATE TABLE `used_product_sell_history` (
   `p_id` int DEFAULT NULL,
   `psh_option` varchar(255) DEFAULT NULL,
   `psh_regist_datetime` datetime DEFAULT NULL,
-  `psh_selled_datetime` datetime DEFAULT NULL,
+  `psh_sold_datetime` datetime DEFAULT NULL,
   `psh_price` int DEFAULT NULL,
   `psh_is_quickly` tinyint DEFAULT NULL,
   PRIMARY KEY (`psh_id`)
@@ -223,7 +224,8 @@ CREATE TABLE IF NOT EXISTS `product_daily_statistics` (
   `ps_avg_price` DECIMAL(10, 0) DEFAULT NULL,
   `ps_total_sales` INT DEFAULT 0,
   PRIMARY KEY (`ps_id`),
-  UNIQUE KEY (`ps_stat_date`, `p_id`, `ps_option`)
+  UNIQUE KEY (`ps_stat_date`, `p_id`, `ps_option`),
+  INDEX (`p_id`, `ps_stat_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 DROP TABLE IF EXISTS `product_monthly_statistics`;
@@ -237,5 +239,6 @@ CREATE TABLE IF NOT EXISTS `product_monthly_statistics` (
   `ps_avg_price` DECIMAL(10, 0) DEFAULT NULL,
   `ps_total_sales` INT DEFAULT 0,
   PRIMARY KEY (`ps_id`),
-  UNIQUE KEY (`ps_stat_month`, `p_id`, `ps_option`)
+  UNIQUE KEY (`ps_stat_month`, `p_id`, `ps_option`),
+  INDEX (`p_id`, `ps_stat_month`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
