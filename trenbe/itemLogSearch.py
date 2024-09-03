@@ -113,7 +113,6 @@ def __main__():
             time.sleep(2)
 
             source = BeautifulSoup(driver.page_source, 'html.parser')
-            print(source)
             price = re.sub(r'[,\s원-]', '', source.select_one('.PriceWithTag__Price-mzv8qx-0').text)
             img_urls = ''
 
