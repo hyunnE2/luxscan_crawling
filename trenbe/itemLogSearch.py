@@ -11,6 +11,8 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 
+from fake_useragent import UserAgent
+
 load_dotenv()
 
 DB_CONFIG = {
@@ -26,6 +28,10 @@ SAVE_PATH = os.environ.get('SAVE_PATH')+'trenbe/'
 exe_chromedriver_path = os.environ.get('EXECUTABLE_CHROMEDRIVER_PATH')
 
 LOG_FILE = SAVE_PATH+'itemLogSearch.log'
+
+ua = UserAgent()
+ua.browsers.remove('chrome')
+ua_rd = ua.random
 
 # Initialize log file
 def init_log(file_path):
@@ -45,7 +51,7 @@ def init_chrome_options():
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    chrome_options.add_argument(f"user-agent={ua_rd}")
     return chrome_options
 
 
@@ -80,7 +86,7 @@ def __main__():
         chrome_options = init_chrome_options()
 
         driver = webdriver.Chrome(executable_path=exe_chromedriver_path, options=chrome_options)
-        driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
+        driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": ua_rd})
         driver.execute_cdp_cmd('Network.enable', {})
 
         conn = pymysql.connect(**DB_CONFIG)
