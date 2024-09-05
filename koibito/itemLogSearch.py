@@ -63,7 +63,7 @@ def fetch_brand(cur):
 def update_used_product(cur, product, is_selled):
     cur.execute('update used_product set b_id=%s, p_is_possible_crawling=%s, p_price=%s, p_img_url=%s, p_last_crawling_datetime=%s where p_id=%s', (product['b_id'], 0 if is_selled else 1, product['p_price'], product['p_img_url'], datetime.now(), product['p_id']))
     if is_selled:
-        cur.execute('insert into used_product_sell_history(`p_id`, `g_id`, `psh_selled_datetime`, `psh_price`) values(%s, %s, %s, %s)', (product['p_id'], product['g_id'], datetime.now(), product['p_price']))
+        cur.execute('insert into used_product_sell_history(`p_id`, `g_id`, `psh_sold_datetime`, `psh_price`) values(%s, %s, %s, %s)', (product['p_id'], product['g_id'], datetime.now(), product['p_price']))
 
 
 def __main__():
