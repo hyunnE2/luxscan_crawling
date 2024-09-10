@@ -133,14 +133,6 @@ def __main__():
                 if title == '컬러':
                     color = re.sub(r'[\s]', '', contents[idx].text.strip())
                     
-            upper_brand = brand.replace(' ', '').upper()
-            if brands.get(upper_brand) == None:
-                cur.execute("insert into brand(m_id, b_name, b_search_keyword) values(4,%s, %s)", (brand, brand))
-                cur.execute("select * from brand where m_id = 4 order by b_id desc")
-                product['b_id'] = cur.fetchone()['b_id']
-                brands[upper_brand] = product['b_id']
-            else:
-                product['b_id'] = brands.get(upper_brand)
 
             if price.find('판매완료상품') > -1:
                 insert_log(cur, product)

@@ -1,4 +1,6 @@
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 
 import time
 import traceback
@@ -50,6 +52,17 @@ def fetch_grade(cur):
     return grades
 
 
+def fetch_brand(cur):
+    cur.execute('select * from brand where m_id = 4')
+    tmp_grades = cur.fetchall()
+
+    grades = {}
+    for grade in tmp_grades:
+        grades[grade['b_name']] = grade['b_id']
+    
+    return grades
+
+
 def init_chrome_options():
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--headless=new")
@@ -76,6 +89,7 @@ try:
     init_log(LOG_FILE)
 
     grades = fetch_grade(cur)
+    brands = fetch_brand(cur)
 
     chrome_options = init_chrome_options()
 
@@ -83,47 +97,59 @@ try:
     driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
     driver.execute_cdp_cmd('Network.enable', {})
 
-    url = f'{base_url}/shopping/new_update.asp?sm_date=0&PS=96&'
-    i = 1
-    while True:
-        driver.get(url+'GP='+str(i))
+    url = f'{base_url}/update?tabDate='
+    for i in range(0, 7):
+        if i == 0:
+            swp = 'TODAY'
+        else:
+            swp = str(i)+'DAYAGO'
+        driver.get(url+swp)
         time.sleep(2)
 
         last_height = driver.execute_script("return document.body.scrollHeight")
         new_height = 0
 
-        while new_height < last_height:
-            driver.execute_script("window.scrollBy(0, 400);")
-            time.sleep(0.2)  # Adjust sleep time as needed
-            new_height = driver.execute_script("return window.scrollY + window.innerHeight") + 300
+        while True:
+            driver.find_element(By.TAG_NAME, "body").send_keys(Keys.END)
+            time.sleep(1)
+
+            new_height = driver.execute_script("return document.body.scrollHeight")
+            if new_height == last_height:
+                break
+            last_height = new_height
 
         soup = BeautifulSoup(driver.page_source, 'html.parser')
 
-        products = soup.select('.productListSec > ul > li')
-        if len(products) < 1:
-            if i == 1:
-                write_log(LOG_FILE, f'not found products')
-            break
-        else:
-            write_log(LOG_FILE, f"loaded product count : {len(products)}")
+        products = soup.select('#goods-ul > .grid-item')
             
         for product in products:
-            p_url = product.select_one('.prod > a')['href']
-            p_info = product.select('.txt > p')
+            p_url = product.select_one('.btn-link')['onclick']
+            p_url = "https://www.gugus.co.kr/goods/viewGoods?goodsNo="+p_url[p_url.find('(')+1:p_url.find(')')]
 
-            name = p_info[0].text
-            g_id = grades.get(p_info[1].select_one('.condition > img')['alt'])
-            price = p_info[1].select_one('.numType1').text
-            price = re.sub(r'[,\s원-]', '', price.strip())
+            p_info = product.select_one('.info-box')
 
+            name = p_info.select_one('.title').text.strip()
+            brand = brands.get(p_info.select_one('.prod-price > .goods-group').text.strip())
+            
+            if brands.get(brand) == None:
+                cur.execute("insert into brand(m_id, b_name, b_search_keyword) values(4,%s, %s)", (brand, brand))
+                cur.execute("select * from brand where m_id = 4 order by b_id desc")
+                brands[brand] = b_id
+                b_id = cur.fetchone()['b_id']
+            else:
+                b_id = brands.get(brand)
+
+            g_id = grades.get(p_info.select_one('.prod-price > span > .text').text.strip())
+            price = p_info.select_one('.prod-price > .goods-group').text.strip()
+            price = re.sub(r'[,\s원-]', '', price)
+  
             sql = """
-            INSERT INTO used_product (m_id, g_id, p_name_kr, p_price, p_url, p_origin_price, p_count, p_model_number, p_color, p_img_url, p_last_crawling_datetime)
-            VALUES (4, %s, %s, %s, %s, 0, 1, 0, '', '', NOW())
+            INSERT INTO used_product (m_id, b_id, g_id, p_name_kr, p_price, p_url, p_origin_price, p_count, p_model_number, p_color, p_img_url, p_last_crawling_datetime)
+            VALUES (4, %s, %s, %s, %s, %s, 0, 1, 0, '', '', NOW())
             ON DUPLICATE KEY UPDATE p_last_crawling_datetime = NOW();
             """
-            cur.execute(sql, (g_id, name, price, base_url+p_url))
+            cur.execute(sql, (b_id, g_id, name, price, base_url+p_url))
             conn.commit()
-        i += 1    
         
 
 except Exception:
