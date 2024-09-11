@@ -70,8 +70,13 @@ try:
             tds = tables[1].select('td')
             
             grade = re.sub(r'[\s]', '', tds[0].text.strip())
-
             g_id = grades.get(grade)
+            if g_id == None:
+                cur.execute('insert into `grade`(`m_id`, `g_market_grade`) values(3, %s)', (grade))
+                cur.execute('select * from `grade` where `g_market_grade` = %s', (grade))
+                g_id = cur.fetchone()['g_id']
+                grades[grade] = g_id
+
             price = re.sub(r'[,\s원-]', '', tds[1].text.strip())
 
             if price.find('거래진행중') > -1:

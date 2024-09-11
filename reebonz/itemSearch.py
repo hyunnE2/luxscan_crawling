@@ -131,6 +131,12 @@ try:
         brand = product.select_one('.first-desc').text
         grade = product.select_one('.img-box').text
         g_id = grades.get(grade)
+        if g_id == None:
+            cur.execute('insert into `grade`(`m_id`, `g_market_grade`) values(5, %s)', (grade))
+            cur.execute('select * from `grade` where `g_market_grade` = %s', (grade))
+            g_id = cur.fetchone()['g_id']
+            grades[grade] = g_id
+
         name = product.select_one('.product-name').text
         price = re.sub(r'[,\s원-]', '', product.select_one('.price').text.strip())
 

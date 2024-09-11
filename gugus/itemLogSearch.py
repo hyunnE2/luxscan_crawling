@@ -51,7 +51,7 @@ def fetch_brand(cur):
     tmp_brands = cur.fetchall()
     brands = {}
     for brand in tmp_brands:
-        brands[brand['b_name'].replace(' ', '').upper()] = brand['b_id']
+        brands[brand['b_name']] = brand['b_id']
     return brands
 
 def init_chrome_options():
@@ -90,7 +90,6 @@ def __main__():
         driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
         driver.execute_cdp_cmd('Network.enable', {})
 
-        brands = fetch_brand(cur)
 
         last_crawled_p_id = get_last_crawled_p_id(cur)
         used_products = fetch_used_products(cur, last_crawled_p_id, p_count=0)
@@ -114,30 +113,18 @@ def __main__():
                 pass  # 알림창이 없으면 계속 진행
 
             soup = BeautifulSoup(driver.page_source, 'html.parser')
-            info = soup.select_one('.info.container')
+            info = soup.select('.prod-detail-info-wrap .scont-box')[0]
 
-            titles = info.select('dt')
-            contents = info.select('dd')
-            img_urls = ','.join([i['src'] for i in soup.select('.img > .more > .thumb > li > input')])
+            img_urls = ','.join([i['src'] for i in soup.select('.prod-detail-header .prod-detail-swiper-wrap img')])
 
-            brand = ""
-            price = "0"
-            color = ""
-
-            for idx, title in enumerate(titles):
-                title = re.sub(r'[\s]', '', title.text.strip())
-                if title == '브랜드':
-                    brand = re.sub(r'[\s]', '', contents[idx].text.strip())
-                if title == '가격':
-                    price = re.sub(r'[,\s원-]', '', contents[idx].text.strip())
-                if title == '컬러':
-                    color = re.sub(r'[\s]', '', contents[idx].text.strip())
-                    
-
+            price = info.select_one('.prod-price .val').text.strip()
+            price = re.sub(r'[,\s원-]', '', price)
+            product['p_price'] = price
+            
             if price.find('판매완료상품') > -1:
                 insert_log(cur, product)
             else:
-                cur.execute("update used_product set b_id = %s, p_price = %s, p_color = %s, p_img_url = %s, p_last_crawling_datetime = %s where p_id = %s", (product['b_id'], price, color, img_urls, datetime.now(), product['p_id']))           
+                cur.execute("update used_product set p_price = %s, p_img_url = %s, p_last_crawling_datetime = %s where p_id = %s", (price, img_urls, datetime.now(), product['p_id']))           
             cur.execute("update config set cfg_value = %s where cfg_key = 'gugus_crawled_p_id'", (product['p_id']))
             
                 

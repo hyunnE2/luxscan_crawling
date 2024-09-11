@@ -54,13 +54,13 @@ def fetch_grade(cur):
 
 def fetch_brand(cur):
     cur.execute('select * from brand where m_id = 4')
-    tmp_grades = cur.fetchall()
+    tmp_brands = cur.fetchall()
 
-    grades = {}
-    for grade in tmp_grades:
-        grades[grade['b_name']] = grade['b_id']
+    brands = {}
+    for brand in tmp_brands:
+        brands[brand['b_name']] = brand['b_id']
     
-    return grades
+    return brands
 
 
 def init_chrome_options():
@@ -124,33 +124,39 @@ try:
             
         for product in products:
             p_url = product.select_one('.btn-link')['onclick']
-            p_url = "https://www.gugus.co.kr/goods/viewGoods?goodsNo="+p_url[p_url.find('(')+1:p_url.find(')')]
+            p_url = base_url+"/goods/viewGoods?goodsNo="+p_url[p_url.find('(')+1:p_url.find(')')]
 
             p_info = product.select_one('.info-box')
 
             name = p_info.select_one('.title').text.strip()
-            brand = brands.get(p_info.select_one('.prod-price > .goods-group').text.strip())
-            
+            brand = p_info.select_one('.brand').text.strip()
+
             if brands.get(brand) == None:
                 cur.execute("insert into brand(m_id, b_name, b_search_keyword) values(4,%s, %s)", (brand, brand))
                 cur.execute("select * from brand where m_id = 4 order by b_id desc")
-                brands[brand] = b_id
                 b_id = cur.fetchone()['b_id']
+                brands[brand] = b_id
             else:
                 b_id = brands.get(brand)
 
-            g_id = grades.get(p_info.select_one('.prod-price > span > .text').text.strip())
+            grade = p_info.select_one('.prod-price > span > .text').text.strip()
+            g_id = grades.get(grade)
+            if g_id == None:
+                cur.execute('insert into `grade`(`m_id`, `g_market_grade`) values(4, %s)', (grade))
+                cur.execute('select * from `grade` where `g_market_grade` = %s', (grade))
+                g_id = cur.fetchone()['g_id']
+                grades[grade] = g_id
+
             price = p_info.select_one('.prod-price > .goods-group').text.strip()
             price = re.sub(r'[,\s원-]', '', price)
-  
+
             sql = """
             INSERT INTO used_product (m_id, b_id, g_id, p_name_kr, p_price, p_url, p_origin_price, p_count, p_model_number, p_color, p_img_url, p_last_crawling_datetime)
             VALUES (4, %s, %s, %s, %s, %s, 0, 1, 0, '', '', NOW())
             ON DUPLICATE KEY UPDATE p_last_crawling_datetime = NOW();
             """
-            cur.execute(sql, (b_id, g_id, name, price, base_url+p_url))
+            cur.execute(sql, (b_id, g_id, name, price, p_url))
             conn.commit()
-        
 
 except Exception:
     e = traceback.format_exc()

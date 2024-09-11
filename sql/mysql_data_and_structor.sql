@@ -53,7 +53,7 @@ CREATE TABLE `grade`(
   `g_comment` varchar(255),
   PRIMARY KEY (`g_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-INSERT INTO `grade`(`m_id`, `g_grade`, `g_market_grade`) VALUES (1, 'S+', '100'), (2, 'S+', 'S+'), (2, 'A+', 'A+'), (2, 'A', 'A'), (2, 'B+', 'B+'), (2, 'B', 'B'), (3, 'S+', 'N'), (3, 'S+', 'S'), (3, 'S+', 'SA'), (3, 'A+', 'A+'), (3, 'A', 'A'), (3, 'A', 'A-'), (3, 'B+', 'AB'), (3, 'B+', 'B'), (3, 'B', 'BC'), (3, 'B', 'C'), (4, 'S+', 'N-S'), (4, 'A+', 'A+'), (4, 'A', 'A'), (4, 'B+', 'B+'), (4, 'B', 'B'), (4, 'null', 'USED'), (5, 'S+', 'unused'), (5, 'A+', 'perfect'), (5, 'A', 'excellent'), (5, 'B+', 'very-good'), (5, 'B+', 'good'), (5, 'B', 'normal'), (6, 'S+', '사용감 없음'), (6, 'A', '사용감 적음'), (6, 'B', '사용감 많음');
+INSERT INTO `grade`(`m_id`, `g_grade`, `g_market_grade`) VALUES (1, 'S+', '100'), (2, 'S+', 'S+'), (2, 'A+', 'A+'), (2, 'A', 'A'), (2, 'B+', 'B+'), (2, 'B', 'B'), (3, 'S+', 'N'), (3, 'S+', 'S'), (3, 'S+', 'SA'), (3, 'A+', 'A+'), (3, 'A', 'A'), (3, 'A', 'A-'), (3, 'B+', 'AB'), (3, 'B+', 'B'), (3, 'B', 'BC'), (3, 'B', 'C'), (4, 'S+', 'N-S'), (4, 'S+', 'N'), (4, 'S+', 'S'), (4, 'A+', 'A+'), (4, 'A', 'A'), (4, 'B+', 'B+'), (4, 'B', 'B'), (4, 'B', 'USED'), (5, 'S+', 'unused'), (5, 'A+', 'perfect'), (5, 'A', 'excellent'), (5, 'B+', 'very-good'), (5, 'B+', 'good'), (5, 'B', 'normal'), (6, 'S+', '사용감 없음'), (6, 'A', '사용감 적음'), (6, 'B', '사용감 많음');
 
 
 DROP TABLE IF EXISTS `config`;
