@@ -177,7 +177,7 @@ def main():
                     if len(rows) > 0:
                         save_to_csv(rows, f'{table}_{brand["b_name"]}')
             elif table == 'price_by_option_of_product':
-                rows = fetch_table_data(cur, table, 'pboop_id, product.p_id, pboop_option, pboop_price, pboop_quick_price, pboop_datetime', 'join product on product.p_id = price_by_option_of_product.p_id')
+                rows = fetch_table_data(cur, table, 'pboop_id, product.p_id, p_url, pboop_option, pboop_price, pboop_quick_price, pboop_datetime', 'join product on product.p_id = price_by_option_of_product.p_id')
 
                 save_to_csv(rows, table)
             else:
