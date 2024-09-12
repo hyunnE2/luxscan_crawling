@@ -172,7 +172,7 @@ def main():
             if table == 'product':
                 for brand in brands:
                     
-                    rows = fetch_table_data(cur, table, 'm_name, b_name, p_name, p_name_kr, p_price, p_origin_price, p_count, p_option, p_model_number, p_color, p_url, p_img_url, p_last_crawling_datetime', f'join market on market.m_id = {table}.m_id join brand on brand.b_id = {table}.b_id', f'where {table}.b_id = {brand["b_id"]}')
+                    rows = fetch_table_data(cur, table, 'm_name, b_name, product.p_id, p_name, p_name_kr, p_price, p_origin_price, p_count, p_option, p_model_number, p_color, p_url, p_img_url, p_last_crawling_datetime', f'join market on market.m_id = {table}.m_id join brand on brand.b_id = {table}.b_id', f'where {table}.b_id = {brand["b_id"]}')
 
                     if len(rows) > 0:
                         save_to_csv(rows, f'{table}_{brand["b_name"]}')
