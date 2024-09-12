@@ -118,7 +118,7 @@ try:
                 
 
                 try:
-                    js_items = driver.execute_script("return window.__NUXT__.state['search-tab']['productFeed']['items']")
+                    js_items = driver.execute_script("return window.__NUXT__.pinia['search-tab']['productFeed']['items']")
                 except Exception:
                     file.write(f'bot1 : not found js_items')
                     continue
