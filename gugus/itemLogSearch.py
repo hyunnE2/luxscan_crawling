@@ -1,5 +1,6 @@
 from selenium import webdriver
 from selenium.common.exceptions import NoAlertPresentException
+from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 import time
 import traceback
@@ -56,7 +57,7 @@ def fetch_brand(cur):
 
 def init_chrome_options():
     chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument("--headless=new")
+    # chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -65,9 +66,11 @@ def init_chrome_options():
     
     return chrome_options
 
-def insert_log(cur, product):
+def insert_log(cur, product, conn):
     cur.execute("update used_product set b_id = %s, p_is_possible_crawling = %s, p_last_crawling_datetime = %s where p_id = %s", (product['b_id'], 0, datetime.now(), product['p_id']))
     cur.execute("insert into used_product_sell_history(p_id, psh_sold_datetime, psh_price) values(%s, %s, %s)", (product['p_id'], datetime.now(), product['p_price']))
+    cur.execute("update config set cfg_value = %s where cfg_key = 'gugus_crawled_p_id'", (product['p_id']))
+    conn.commit()
 
 def quitDriver(driver):
     try:
@@ -90,6 +93,16 @@ def __main__():
         driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
         driver.execute_cdp_cmd('Network.enable', {})
 
+        driver.get('https://www.gugus.co.kr')
+        time.sleep(2)
+
+        try:
+            driver.find_element(By.CSS_SELECTOR, '#bodyDialog4.open')
+
+            driver.find_element(By.CSS_SELECTOR, '#bodyDialog4.open .dialog-footer .left-area > button').click()
+        except Exception:
+            pass
+        
 
         last_crawled_p_id = get_last_crawled_p_id(cur)
         used_products = fetch_used_products(cur, last_crawled_p_id, p_count=0)
@@ -106,12 +119,16 @@ def __main__():
                 alert = driver.switch_to.alert
                 alert_text = alert.text
                 if '상품이 존재하지 않습니다' in alert_text:
-                    insert_log(cur, product)
+                    insert_log(cur, product, conn)
                     alert.accept()  # Alert 닫기
                     continue  # 다음 제품으로 넘어가기
             except NoAlertPresentException:
                 pass  # 알림창이 없으면 계속 진행
 
+            if driver.current_url.find('https://www.gugus.co.kr') > -1:
+                insert_log(cur, product, conn)
+                continue
+            
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             info = soup.select('.prod-detail-info-wrap .scont-box')[0]
 
@@ -122,13 +139,13 @@ def __main__():
             product['p_price'] = price
             
             if price.find('판매완료상품') > -1:
-                insert_log(cur, product)
+                insert_log(cur, product, conn)
             else:
                 cur.execute("update used_product set p_price = %s, p_img_url = %s, p_last_crawling_datetime = %s where p_id = %s", (price, img_urls, datetime.now(), product['p_id']))           
-            cur.execute("update config set cfg_value = %s where cfg_key = 'gugus_crawled_p_id'", (product['p_id']))
+                cur.execute("update config set cfg_value = %s where cfg_key = 'gugus_crawled_p_id'", (product['p_id']))
+                conn.commit()
             
                 
-            conn.commit()
 
     except Exception:
         err = traceback.format_exc()
