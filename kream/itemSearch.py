@@ -57,10 +57,10 @@ driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.
 driver.execute_cdp_cmd('Network.enable', {})
 
 try:
-    cur.execute('select b_id, b_name from brand where b_super_id is NULL')
+    cur.execute('select b_id, b_name from brand where b_super_id is NULL and b_id = 4')
     brands = cur.fetchall()
 
-    cur.execute('select c_id, c_keyword, c_name, c_is_men, c_is_women from category')
+    cur.execute('select c_id, c_keyword, c_name, c_is_men, c_is_women from category where c_id = 46')
     categories = cur.fetchall()
     for brand in brands:
         cur.execute(f'select * from product where b_id = {brand["b_id"]} and m_id = 1')
@@ -99,39 +99,37 @@ try:
                 file.write(f'search products : {len(driver_items)}\n')
                 
                 for driver_item in driver_items:
-                    item_name = driver_item.select_one('.product_info_product_name > .name').text
-                    items[item_name] = {}
-                    items[item_name]['name'] = item_name
-                    items[item_name]['market_id'] = 1
-                    items[item_name]['brand_id'] = brand["b_id"]
-                    items[item_name]['kr_name'] = driver_item.select_one('.product_info_product_name > .translated_name').text
-                    items[item_name]['price'] = re.sub(r'[,\s원-]','',driver_item.select_one('.price > .amount').text)
+                    item_id = driver_item.select_one('.product_card > .item_inner')['href'].replace('/products/', '').replace(' ', '')
+                    
+                    items[item_id] = {}
+                    items[item_id]['name'] = driver_item.select_one('.product_info_product_name > .name').text
+                    items[item_id]['market_id'] = 1
+                    items[item_id]['brand_id'] = brand["b_id"]
+                    items[item_id]['kr_name'] = driver_item.select_one('.product_info_product_name > .translated_name').text
+                    items[item_id]['price'] = re.sub(r'[,\s원-]','',driver_item.select_one('.price > .amount').text)
 
                     discount_rate = driver_item.select_one('.price > .amount > .discount_rate')
                     if discount_rate != None:
-                        items[item_name]['price'] = items[item_name]['price'].replace(discount_rate.text, '')
+                        items[item_id]['price'] = items[item_id]['price'].replace(discount_rate.text, '')
 
-                    items[item_name]['price'] = int(items[item_name]['price']) if items[item_name]['price'] != "" else 0
+                    items[item_id]['price'] = int(items[item_id]['price']) if items[item_id]['price'] != "" else 0
 
-                    items[item_name]['url'] = base_url+driver_item.select_one('.item_inner')['href']
-                    items[item_name]['img_url'] = driver_item.select_one('.product_img > img')['src']
-                
+                    items[item_id]['url'] = base_url+driver_item.select_one('.item_inner')['href']
+                    items[item_id]['img_url'] = driver_item.select_one('.product_img > img')['src']
 
                 try:
                     js_items = driver.execute_script("return window.__NUXT__.pinia['search-tab']['productFeed']['items']")
                 except Exception:
                     file.write(f'bot1 : not found js_items')
                     continue
-                
-
                 for js_item in js_items:
-                    item_name = js_item['product']['release']['name']
-                    items[item_name]['origin_price'] = js_item['product']['release']['original_price']
-                    items[item_name]['sales'] = js_item['product']['market']['total_sales']
-                    items[item_name]['option'] = ','.join(js_item['product']['options'])
-                    items[item_name]['img_url'] = ','.join(js_item['product']['release']['image_urls'])
-                    items[item_name]['model_number'] = js_item['product']['release']['style_code']
-                    items[item_name]['color'] = js_item['product']['release']['colorway']
+                    item_id = str(js_item['product']['release']['id'])
+                    items[item_id]['origin_price'] = js_item['product']['release']['original_price']
+                    items[item_id]['sales'] = js_item['product']['market']['total_sales']
+                    items[item_id]['option'] = ','.join(js_item['product']['options'])
+                    items[item_id]['img_url'] = ','.join(js_item['product']['release']['image_urls'])
+                    items[item_id]['model_number'] = js_item['product']['release']['style_code']
+                    items[item_id]['color'] = js_item['product']['release']['colorway']
 
 
                 for item in items:
