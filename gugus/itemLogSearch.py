@@ -57,7 +57,7 @@ def fetch_brand(cur):
 
 def init_chrome_options():
     chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument("--headless=new")
+    # chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
