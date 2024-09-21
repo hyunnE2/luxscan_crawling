@@ -57,10 +57,10 @@ driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.
 driver.execute_cdp_cmd('Network.enable', {})
 
 try:
-    cur.execute('select b_id, b_name from brand where b_super_id is NULL and b_id = 4')
+    cur.execute('select b_id, b_name from brand where b_super_id is NULL')
     brands = cur.fetchall()
 
-    cur.execute('select c_id, c_keyword, c_name, c_is_men, c_is_women from category where c_id = 46')
+    cur.execute('select c_id, c_keyword, c_name, c_is_men, c_is_women from category')
     categories = cur.fetchall()
     for brand in brands:
         cur.execute(f'select * from product where b_id = {brand["b_id"]} and m_id = 1')
