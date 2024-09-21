@@ -83,6 +83,9 @@ def quitDriver(driver):
         pass
 
 def __main__():
+    driver = None
+    conn = None
+    
     try:
         init_log(LOG_FILE)
         conn = pymysql.connect(**DB_CONFIG)
