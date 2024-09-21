@@ -1,5 +1,6 @@
 from selenium import webdriver
-from selenium.common.exceptions import UnexpectedAlertPresentException
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoAlertPresentException
 from bs4 import BeautifulSoup
 import time
 import traceback
@@ -100,6 +101,23 @@ def __main__():
         for product in products:
             driver.get(product['p_url'])
             time.sleep(5)
+
+            try:
+                alert = driver.switch_to.alert
+                alert.accept()
+
+                write_log(LOG_FILE, f"selled found : p_url {product['p_url']}")
+                update_used_product(cur, product, True)
+                continue  # 다음 제품으로 넘어가기
+            except NoAlertPresentException:
+                pass
+
+            try:
+                driver.find_elements(By.CSS_SELECTOR, '#popupModal .footer button')[0].click()
+                time.sleep(1)
+            except:
+                pass
+
             try:
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
                 
@@ -113,12 +131,9 @@ def __main__():
                 else:
                     update_used_product(cur, product, False)
 
-            except UnexpectedAlertPresentException:
-                write_log(LOG_FILE, f"selled found : p_url {product['p_url']}")
-                update_used_product(cur, product, True)
             except Exception:
                 txt = soup.select_one('#buttonsArea').text
-                if txt.find('날짜 선택하기') > -1 or txt.find('렌트') > -1:
+                if txt.find('날짜 선택하기') > -1 or txt.find('렌트') > -1 or txt.find('구독') > -1:
                     print('pass')
                     pass
                 else:
