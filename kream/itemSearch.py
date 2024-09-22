@@ -60,7 +60,7 @@ try:
     cur.execute('select b_id, b_name from brand where b_super_id is NULL')
     brands = cur.fetchall()
 
-    cur.execute('select c_id, c_keyword, c_name, c_is_men, c_is_women from category')
+    cur.execute('select c_id, c_keyword, c_name, c_is_men, c_is_women from category where m_id = 1')
     categories = cur.fetchall()
     for brand in brands:
         cur.execute(f'select * from product where b_id = {brand["b_id"]} and m_id = 1')
