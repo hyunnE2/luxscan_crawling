@@ -57,7 +57,7 @@ def fetch_brand(cur):
 
 def init_chrome_options():
     chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument("--headless=new")
+    # chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -128,7 +128,7 @@ def __main__():
             except NoAlertPresentException:
                 pass  # 알림창이 없으면 계속 진행
 
-            if driver.current_url.find('https://www.gugus.co.kr') > -1:
+            if driver.current_url == 'https://www.gugus.co.kr':
                 insert_log(cur, product, conn)
                 continue
             
