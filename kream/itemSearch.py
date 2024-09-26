@@ -57,10 +57,10 @@ driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.
 driver.execute_cdp_cmd('Network.enable', {})
 
 try:
-    cur.execute('select b_id, b_name from brand where b_super_id is NULL')
+    cur.execute('select b_id, b_name from brand where b_super_id is NULL and b_id = 3')
     brands = cur.fetchall()
 
-    cur.execute('select c_id, c_keyword, c_name, c_is_men, c_is_women from category where m_id = 1')
+    cur.execute('select c_id, c_keyword, c_name, c_is_men, c_is_women from category where m_id = 1 and c_id = 10')
     categories = cur.fetchall()
     for brand in brands:
         cur.execute(f'select * from product where b_id = {brand["b_id"]} and m_id = 1')
@@ -79,13 +79,13 @@ try:
                 
                 driver.get(f'https://kream.co.kr/brands/{brand["b_name"]}?gender={gender}&shop_category_id={category["c_keyword"]}&sort=popular_score')
                 file.write(f'bot1 get_url :  https://kream.co.kr/brands/{brand["b_name"]}?gender={gender}&shop_category_id={category["c_keyword"]}&sort=popular_score\n')
-                time.sleep(1)
+                time.sleep(2)
 
                 last_height = driver.execute_script("return document.body.scrollHeight")
                 while True:
                     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                     
-                    time.sleep(2)
+                    time.sleep(3)
                     
                     new_height = driver.execute_script("return document.body.scrollHeight")
                     

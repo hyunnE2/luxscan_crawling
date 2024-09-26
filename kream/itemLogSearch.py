@@ -45,7 +45,7 @@ file.write(f'start bot2 at : {datetime.now()}\n')
 
 # setting chrome options
 chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument("--headless=new")
+# chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
@@ -192,9 +192,9 @@ except Exception:
     cur.execute(f'delete from crawling_product_list where cpl_id <= {last_cpl_id}')
 
     conn.commit()
+finally:
+    file.write(f'end bot2 at : {datetime.now()}\n\n')
+    file.close()
 
-file.write(f'end bot2 at : {datetime.now()}\n\n')
-file.close()
-
-quitDriver(driver)
-conn.close()
+    quitDriver(driver)
+    conn.close()
