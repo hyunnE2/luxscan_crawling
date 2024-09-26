@@ -181,6 +181,7 @@ CREATE TABLE `used_product_sell_history` (
   `psh_is_quickly` tinyint DEFAULT NULL,
   PRIMARY KEY (`psh_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+ALTER TABLE `used_product_sell_history` ADD CONSTRAINT `fk_used_product_p_id` FOREIGN KEY (`p_id`) REFERENCES `used_product`(`p_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 
 DROP TABLE IF EXISTS `price_by_option_of_product`;
@@ -242,3 +243,4 @@ CREATE TABLE IF NOT EXISTS `product_monthly_statistics` (
   UNIQUE KEY (`ps_stat_month`, `p_id`, `ps_option`),
   INDEX (`p_id`, `ps_stat_month`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
