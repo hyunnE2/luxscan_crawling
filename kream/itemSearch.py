@@ -4,6 +4,7 @@ import pymysql
 import re
 
 from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -83,10 +84,12 @@ try:
 
                 last_height = driver.execute_script("return document.body.scrollHeight")
                 while True:
-                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                    old_height = driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
                     
+                    body = driver.find_element_by_css_selector('body')
+                    body.send_keys(Keys.ARROW_UP)
+
                     time.sleep(3)
-                    
                     new_height = driver.execute_script("return document.body.scrollHeight")
                     
                     if new_height == last_height:
