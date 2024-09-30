@@ -132,6 +132,14 @@ def __main__():
                 insert_log(cur, product, conn)
                 continue
             
+            try:
+                driver.find_element(By.CSS_SELECTOR, ".open #popDialogAlert")
+                
+                insert_log(cur, product, conn)
+                continue
+            except:
+                pass
+
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             info = soup.select('.prod-detail-info-wrap .scont-box')[0]
 
