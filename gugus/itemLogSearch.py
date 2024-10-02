@@ -57,7 +57,7 @@ def fetch_brand(cur):
 
 def init_chrome_options():
     chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument("--headless=new")
+    # chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -67,7 +67,7 @@ def init_chrome_options():
     return chrome_options
 
 def insert_log(cur, product, conn):
-    cur.execute("update used_product set b_id = %s, p_is_possible_crawling = %s, p_last_crawling_datetime = %s where p_id = %s", (product['b_id'], 0, datetime.now(), product['p_id']))
+    cur.execute("update used_product set b_id = %s, p_is_possible_crawling = %s, p_price = %s, p_img_url = %s, p_last_crawling_datetime = %s where p_id = %s", (product['b_id'], 0, datetime.now(), product['p_id']))
     cur.execute("insert into used_product_sell_history(p_id, psh_sold_datetime, psh_price) values(%s, %s, %s)", (product['p_id'], datetime.now(), product['p_price']))
     cur.execute("update config set cfg_value = %s where cfg_key = 'gugus_crawled_p_id'", (product['p_id']))
     conn.commit()

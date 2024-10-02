@@ -109,7 +109,6 @@ def __main__():
 
         for product in products:
             driver.get(product['p_url'])
-            print(product['p_url'])
             time.sleep(2)
 
             source = BeautifulSoup(driver.page_source, 'html.parser')
@@ -128,9 +127,8 @@ def __main__():
                 g = grades.get(product['p_option'])
                 cur.execute('insert into used_product_sell_history(p_id, g_id, psh_sold_datetime, psh_price, psh_is_quickly) values(%s, %s, %s, %s, 0)', (product['p_id'], g, datetime.now(), product['p_price']))
             else:
-                if int(price) != product['p_price']:
-                    write_log(LOG_FILE, f'update p_id : {product["p_id"]}')
-                    cur.execute('update used_product set p_price = %s, p_last_crawling_datetime = %s, p_img_url = %s where p_id = %s', (price, datetime.now(), img_urls, product['p_id']))
+                write_log(LOG_FILE, f'update p_id : {product["p_id"]}')
+                cur.execute('update used_product set p_price = %s, p_last_crawling_datetime = %s, p_img_url = %s where p_id = %s', (price, datetime.now(), img_urls, product['p_id']))
             cur.execute("update config set cfg_value = %s where cfg_key = 'trenbe_crawled_p_id'", (product['p_id']))
             conn.commit()
             
