@@ -46,7 +46,7 @@ def get_last_crawled_p_id(cur):
 
 # Fetch products to crawl
 def fetch_used_products(cur, last_crawled_p_id, p_count=80, limit=200):
-    cur.execute(f"SELECT * FROM used_product WHERE m_id = 5 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
+    cur.execute(f"SELECT * FROM used_product WHERE m_id = 5 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} and p_is_possible_crawling = 1 LIMIT {limit}")
     return cur.fetchall()
 
 def init_chrome_options(ua):

@@ -46,7 +46,7 @@ def get_last_crawled_p_id(cur):
 
 # Fetch products to crawl
 def fetch_bunjang_products(cur, last_crawled_p_id, p_count=1, limit=100):
-    cur.execute(f"SELECT * FROM bunjang_product WHERE m_id = 6 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} LIMIT {limit}")
+    cur.execute(f"SELECT * FROM bunjang_product WHERE m_id = 6 AND p_id > {last_crawled_p_id} AND p_count >= {p_count} and p_is_possible_crawling = 1 LIMIT {limit}")
     return cur.fetchall()
 
 def fetch_category(cur):
