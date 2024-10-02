@@ -148,11 +148,14 @@ def __main__():
             price = info.select_one('.prod-price .val').text.strip()
             price = re.sub(r'[,\s원-]', '', price)
             product['p_price'] = price
-            
+
+            content = soup.select_one('#gdsDtlDsct').text.strip()
+            product['content'] = content
+
             if price.find('판매완료상품') > -1:
                 insert_log(cur, product, conn)
             else:
-                cur.execute("update used_product set p_price = %s, p_img_url = %s, p_last_crawling_datetime = %s where p_id = %s", (price, img_urls, datetime.now(), product['p_id']))           
+                cur.execute("update used_product set p_price = %s, p_img_url = %s, p_content = %s, p_last_crawling_datetime = %s where p_id = %s", (price, img_urls, product['content'], datetime.now(), product['p_id']))           
                 cur.execute("update config set cfg_value = %s where cfg_key = 'gugus_crawled_p_id'", (product['p_id']))
                 conn.commit()
             
