@@ -67,7 +67,7 @@ def init_chrome_options():
     return chrome_options
 
 def insert_log(cur, product, conn):
-    cur.execute("update used_product set b_id = %s, p_is_possible_crawling = %s, p_price = %s, p_img_url = %s, p_last_crawling_datetime = %s where p_id = %s", (product['b_id'], 0, datetime.now(), product['p_id']))
+    cur.execute("update used_product set b_id = %s, p_is_possible_crawling = %s, p_price = %s, p_last_crawling_datetime = %s where p_id = %s", (product['b_id'], 0, product['p_price'], datetime.now(), product['p_id']))
     cur.execute("insert into used_product_sell_history(p_id, psh_sold_datetime, psh_price) values(%s, %s, %s)", (product['p_id'], datetime.now(), product['p_price']))
     cur.execute("update config set cfg_value = %s where cfg_key = 'gugus_crawled_p_id'", (product['p_id']))
     conn.commit()
@@ -118,16 +118,6 @@ def __main__():
             driver.get(product['p_url'])
             time.sleep(2)
 
-            try:
-                alert = driver.switch_to.alert
-                alert_text = alert.text
-                if '상품이 존재하지 않습니다' in alert_text:
-                    insert_log(cur, product, conn)
-                    alert.accept()  # Alert 닫기
-                    continue  # 다음 제품으로 넘어가기
-            except NoAlertPresentException:
-                pass  # 알림창이 없으면 계속 진행
-
             if driver.current_url == 'https://www.gugus.co.kr':
                 insert_log(cur, product, conn)
                 continue
@@ -138,6 +128,7 @@ def __main__():
                 insert_log(cur, product, conn)
                 continue
             except:
+                print(traceback.format_exc())
                 pass
 
             soup = BeautifulSoup(driver.page_source, 'html.parser')
