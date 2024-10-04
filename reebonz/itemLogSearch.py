@@ -133,8 +133,9 @@ def __main__():
 
             except Exception:
                 txt = soup.select_one('#buttonsArea').text
-                if txt.find('날짜 선택하기') > -1 or txt.find('렌트') > -1 or txt.find('구독') > -1:
-                    print('pass')
+                rent = soup.select_one('.coupon-info-wrap').text
+                if txt.find('날짜 선택하기') > -1 or txt.find('렌트') > -1 or txt.find('구독') > -1 or rent.find('첫 렌트 할인'):
+                    cur.execute('update used_product set p_is_possible_crawling = 0 where p_id = %s', product['p_id'])
                     pass
                 else:
                     err = traceback.format_exc()
