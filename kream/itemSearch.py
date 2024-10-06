@@ -44,7 +44,7 @@ cur = conn.cursor(pymysql.cursors.DictCursor)
 
 ## login 
 chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument("--headless=new")
+# chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
@@ -145,6 +145,7 @@ try:
                     except Exception:
                         result = None
                     before_sales = 0
+                    print(result, tmp['url'])
                     
                     sql = "insert into product (m_id, b_id, c_id, g_id, p_name, p_name_kr, p_price, p_origin_price, p_count, p_option, p_model_number, p_color, p_url, p_img_url) values(%s, %s, %s, 1, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
                     # crawling list에 리스트 업하고 product에 데이터를 삽입하는 코드
