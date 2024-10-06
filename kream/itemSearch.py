@@ -58,19 +58,8 @@ driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.
 driver.execute_cdp_cmd('Network.enable', {})
 
 try:
-    cur.execute('select * from config where cfg_key = "kream_searched_b_id"')
-    b_id = cur.fetchone()['cfg_value']
-
-    if b_id == None:
-        cur.execute('insert into config values("kream_searched_b_id", 0)')
-        b_id = 0
-
-    cur.execute(f'select b_id, b_name from brand where m_id = 1 and b_id > {b_id} and b_super_id is NULL order by b_id asc limit 1')
+    cur.execute('select b_id, b_name from brand where b_super_id is NULL')
     brands = cur.fetchall()
-
-    if len(brands) < 1:
-        cur.execute(f'select b_id, b_name from brand where m_id = 1 and b_super_id is NULL order by b_id asc limit 1')
-        brands = cur.fetchall()
 
     cur.execute('select c_id, c_keyword, c_name, c_is_men, c_is_women from category where m_id = 1')
     categories = cur.fetchall()
@@ -108,9 +97,11 @@ try:
                     last_height = new_height
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
 
+                time.sleep(4)
+
                 driver_items = soup.select('.search_result_list > .search_result_item')
 
-                file.write(f'search products : {len(driver_items)}\n')
+                file.write(f'search products : {len(driver_items)}, document scrollHeight : {last_height}\n')
                 
                 for driver_item in driver_items:
                     item_id = driver_item.select_one('.product_card > .item_inner')['href'].replace('/products/', '').replace(' ', '')
@@ -181,7 +172,6 @@ try:
             file.flush()
 
         cur.execute(f'update brand set b_update_at = "{datetime.now()}" where b_id = "{brand["b_id"]}"')
-        cur.execute(f'update config set cfg_value = {b_id} where cfg_key = "kream_searched_b_id"')
         conn.commit()
 
 except Exception:
@@ -194,4 +184,3 @@ file.close()
 
 driver.quit()
 conn.close()
-

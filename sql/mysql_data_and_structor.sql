@@ -156,6 +156,17 @@ CREATE TABLE `crawling_product_list` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
+DROP TABLE IF EXISTS `error_product_list`;
+CREATE TABLE `erawling_product_list` (
+  `epl_id` INT NOT NULL AUTO_INCREMENT,
+  `m_id` INT DEFAULT NULL,
+  `table_name` VARCHAR DEFAULT NULL,
+  `p_id` INT DEFAULT NULL,
+  `epl_created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`epl_id`),
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
 DROP TABLE IF EXISTS `product_sell_history`;
 CREATE TABLE `product_sell_history` (
   `psh_id` int NOT NULL AUTO_INCREMENT,
