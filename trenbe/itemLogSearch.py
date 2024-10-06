@@ -46,7 +46,7 @@ def write_log(file_path, message):
 
 def init_chrome_options():
     chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument("--headless=new")
+    # chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -109,7 +109,7 @@ def __main__():
 
         for product in products:
             driver.get(product['p_url'])
-            time.sleep(2)
+            time.sleep(4)
 
             source = BeautifulSoup(driver.page_source, 'html.parser')
             price = re.sub(r'[,\s원-]', '', source.select_one('.PriceWithTag__Price-mzv8qx-0').text)
