@@ -39,9 +39,10 @@ DROP TABLE IF EXISTS `market`;
 CREATE TABLE `market` (
   `m_id` INT NOT NULL AUTO_INCREMENT,
   `m_name` VARCHAR(255) DEFAULT NULL,
+  `m_used` TINYINT DEFAULT 1,
   PRIMARY KEY (`m_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-INSERT INTO `market` VALUES (1,'kream'),(2,'trenbe'),(3,'koibito'),(4,'gugus'), (5, 'reebonz'), (6, 'bunjang');
+INSERT INTO `market` VALUES (1,'kream', 0),(2,'trenbe', 1),(3,'koibito', 1),(4,'gugus', 1), (5, 'reebonz', 1), (6, 'bunjang', 1);
 
 
 DROP TABLE IF EXISTS `grade`;
