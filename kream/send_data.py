@@ -8,12 +8,12 @@ from datetime import datetime
 from dotenv import load_dotenv
 import re
 
-# Load environment variables
+# 환경 변수를 로드
 load_dotenv()
 
-# Define constants
+# 상수 정의
 SAVE_PATH = os.environ.get('SAVE_PATH')
-SAVE_PATH = SAVE_PATH+'kream/'
+SAVE_PATH = SAVE_PATH + 'kream/'
 UPLOAD_PATH = '/home/luxscan/luxscan/public/xlsx/'
 CSV_LIST_PATH = os.path.join(SAVE_PATH, 'csv_list.txt')
 
@@ -26,13 +26,14 @@ DB_CONFIG = {
 }
 
 TABLE_LIST = [
-    'brand', 'category', 'config', 'crawling_product_list', 'market', 
+    'brand', 'category', 'config', 'crawling_product_list', 'market',
     'price_by_option_of_product', 'product', 'product_sell_history', 'grade', 'used_product', 'product_resale', 'used_product_sell_history'
 ]
 
-LOG_FILE = SAVE_PATH+'send_data.log'
+LOG_FILE = SAVE_PATH + 'send_data.log'
 
 
+# 로그 메시지 작성 함수
 def log_message(message, log_file=LOG_FILE, type="a", show_date=True):
     """Logs a message to the log file with a timestamp."""
     with open(log_file, type, encoding='utf-8') as file:
@@ -42,6 +43,7 @@ def log_message(message, log_file=LOG_FILE, type="a", show_date=True):
             file.write(f"{message}\n")
 
 
+# 데이터베이스 연결 함수
 def connect_db():
     """Establishes and returns a connection to the database."""
     try:
@@ -52,16 +54,21 @@ def connect_db():
         raise
 
 
+# 테이블에서 데이터를 가져오는 함수
 def fetch_table_data(cur, table, select='*', join='', where=''):
     """Fetches all rows from the specified table."""
     cur.execute(f"SELECT {select} FROM {table} {join} {where}")
     return cur.fetchall()
 
+
+# 브랜드 리스트를 가져오는 함수
 def fetch_brand_list(cur):
     """Fetches the list of brands."""
     cur.execute("SELECT b_id, b_name FROM brand")
     return cur.fetchall()
 
+
+# 데이터 정리 함수 (특정 문자를 제거)
 def clean_data(data):
     """Cleans the data by removing illegal characters."""
     if isinstance(data, str):
@@ -70,11 +77,13 @@ def clean_data(data):
     return data
 
 
+# 데이터프레임의 모든 요소에 clean_data 함수를 적용
 def clean_dataframe(df):
     """Applies the clean_data function to all elements in the dataframe."""
     return df.applymap(clean_data)
 
 
+# 데이터를 CSV 파일로 저장
 def save_to_csv(rows, table):
     """Saves rows to multiple CSV files, chunked by 10000 rows per sheet."""
     results = [pd.DataFrame(rows[i*10000:(i+1)*10000]) for i in range((len(rows) // 10000) + 1)]
@@ -85,6 +94,7 @@ def save_to_csv(rows, table):
         result.to_csv(csv_path, index=False)
 
 
+# 데이터를 엑셀 파일로 저장
 def save_to_excel(rows, table):
     """Saves rows to an Excel file, chunked by 10000 rows per sheet."""
     results = [pd.DataFrame(rows[i*10000:(i+1)*10000]) for i in range((len(rows) // 10000) + 1)]
@@ -105,6 +115,7 @@ def save_to_excel(rows, table):
             result.to_excel(writer, sheet_name=sheet_name, index=False)
 
 
+# SFTP를 통한 파일 전송 함수
 def send_files_via_sftp():
     """Uploads the files to the remote server via SFTP."""
     try:
@@ -141,13 +152,14 @@ def send_files_via_sftp():
             log_message("Build completed successfully")
         else:
             log_message(f"Build failed with exit status {exit_status}")
-        
+
         ssh.close()
 
     except Exception as e:
         log_message(f"SFTP error: {e}")
 
 
+# CSV 및 XLSX 파일 삭제 함수
 def delete_files():
     """Deletes all CSV and XLSX files in the SAVE_PATH directory."""
     os.remove(CSV_LIST_PATH)
@@ -158,6 +170,7 @@ def delete_files():
             log_message(f"Deleted {file_name}")
 
 
+# 메인 함수
 def main():
     """Main function to run the data fetching, saving, and sending process."""
     try:
@@ -167,17 +180,25 @@ def main():
         cur = conn.cursor(pymysql.cursors.DictCursor)
 
         brands = fetch_brand_list(cur)
-    
+
         for table in TABLE_LIST:
             if table == 'product':
                 for brand in brands:
-                    
-                    rows = fetch_table_data(cur, table, 'm_name, b_name, product.p_id, p_name, p_name_kr, p_price, p_origin_price, p_count, p_option, p_model_number, p_color, p_url, p_img_url, p_last_crawling_datetime', f'join market on market.m_id = {table}.m_id join brand on brand.b_id = {table}.b_id', f'where {table}.b_id = {brand["b_id"]}')
+                    rows = fetch_table_data(
+                        cur, table,
+                        'm_name, b_name, product.p_id, p_name, p_name_kr, p_price, p_origin_price, p_count, p_option, p_model_number, p_color, p_url, p_img_url, p_last_crawling_datetime',
+                        f'JOIN market ON market.m_id = {table}.m_id JOIN brand ON brand.b_id = {table}.b_id',
+                        f'WHERE {table}.b_id = {brand["b_id"]}'
+                    )
 
                     if len(rows) > 0:
                         save_to_csv(rows, f'{table}_{brand["b_name"]}')
             elif table == 'price_by_option_of_product':
-                rows = fetch_table_data(cur, table, 'pboop_id, product.p_id, p_url, pboop_option, pboop_price, pboop_quick_price, pboop_datetime', 'join product on product.p_id = price_by_option_of_product.p_id')
+                rows = fetch_table_data(
+                    cur, table,
+                    'pboop_id, product.p_id, p_url, pboop_option, pboop_price, pboop_quick_price, pboop_datetime',
+                    'JOIN product ON product.p_id = price_by_option_of_product.p_id'
+                )
 
                 save_to_csv(rows, table)
             else:
@@ -195,5 +216,6 @@ def main():
         conn.close()
 
 
+# 메인 실행
 if __name__ == "__main__":
     main()
